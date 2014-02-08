@@ -81,7 +81,7 @@ SPNImmediateTransition {
 	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of SPNPlace instances or names of SPNPlaces
 	var <>clockSpeed, <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
-	var <adjointPatterns, <>name, <>spnMediator;				 // delete var \adjointPatterns - use dependants instead?
+	var <>name, <>spnMediator;
 	var <clock = 0, <>clockReading; // clock is a function with first arg a SPetriNet, and clockReading is a value of this function
 	var <currentState;				// put this var in subclass SPNTimedTransition only?
 
@@ -131,7 +131,6 @@ SPNImmediateTransition {
 	*basicNew {| key |
 		^super.new
 		.prAdd( key )
-		.instVarPut(\adjointPatterns, IdentityDictionary[] )//.put( \gui, a GUI Pattern ? )
 	}
 		
 	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
@@ -296,14 +295,9 @@ SPNTimedTransition : SPNImmediateTransition {
 
 	isTimed { ^true }
 
-	addPattern {| key, aPattern |
-		this.adjointPatterns.put( key, aPattern );
-	}
-
 	neutralize {
 		super.neutralize;
 		this.clock_( clockFunctionDefault );
-		adjointPatterns = IdentityDictionary.new;//.put( \gui , ... )
 	}
 
 	gui {| aWindow | }
