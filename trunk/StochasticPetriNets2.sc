@@ -1,3 +1,5 @@
+// $LastChangedDate$
+// $Rev$
 SPNPlace {
 	classvar <>all;
 	var <tokens, <>name;
