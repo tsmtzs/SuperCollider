@@ -20,7 +20,7 @@ PNPlaceN {
 		var place;
 		place = this.at( key );
 		if( place.isNil){
-			place = super.newCopyArgs( anInteger ?? { 0 } ).prAdd( key ).init;
+			place = super.newCopyArgs( anInteger ?? { 0 }, key ).prAdd.init;
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) };
 		}
@@ -37,13 +37,13 @@ PNPlaceN {
 		isOutputPlaceTo = List[];
 	}
 
-	prAdd {| argKey |
-		all.put( argKey, this );
-		name = argKey;
+	prAdd {
+		all.put( name, this );
+		// name = argKey;
 	}
 
 	tokens_ { | anInteger |
-		this.warning( anInteger );
+		this.warning( anInteger );		// remove this line?
 		tokens = anInteger;
 	}
 
@@ -74,6 +74,161 @@ PNPlaceN {
 		if( anObject.isKindOf( Integer ).not ){
 			("\nPlace"+this.name.asString+anObject.asString + "is not an integer").warn 
 		};
+	}
+}
+
+PNTransitionN {
+	classvar <>all;
+	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
+	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
+	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
+	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
+	var <>name, <>spnMediator;
+	var <currentState;				// put this var in subclass SPNTimedTransition only?
+
+	*initClass{
+		all = IdentityDictionary.new;
+		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
+		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
+		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
+			//transition is enabled when all input places contain at least one token
+			//and all inhibitor places contain no tokens. The message asCollection added 
+			//to prevent nil sets of places
+			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.every( _ == true )
+			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.every( _ == true ) // if tokens is positive integer
+			and: 
+			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.every( _ == true ) }
+		};
+	}
+
+	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+		var transition;
+		transition = this.at( key );
+		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){ 
+			^( "There are  common Places in InputPlaces and InhibitorPlaces of transition" + key.asString ).error;
+		};
+		if( transition.isNil ){
+			transition = this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+		}{
+			if(
+				[ inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction ].any {| elem | elem.notNil }
+			){
+				transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+			}
+		}
+		^transition
+	}
+
+	// global storage
+	*at { arg key;
+		^this.all.at(key)
+	}
+
+	*clearAll {
+		this.all.clear;
+	}
+
+	*basicNew {| key |
+		^super.new
+		.instVarPut( \name, key )
+		.prAdd
+	}
+		
+	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+		this.inputPlaces_( inputPlaces )
+		.inhibitorPlaces_( inhibitorPlaces )
+		.outputPlaces_( outputPlaces )
+		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) }  )
+		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
+		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } )
+		.informPlaces;
+	}
+
+	inputPlaces_ {| inputPlacesArray |
+		this.prSetIfNotNil( \inputPlaces, inputPlacesArray );
+	}
+
+	inputPlaces {| aBoolean = false |
+		^ this.prGetPlaces( inputPlaces, aBoolean );
+	}
+
+	inhibitorPlaces_ {| inhibitorPlacesArray |
+		this.prSetIfNotNil( \inhibitorPlaces, inhibitorPlacesArray );
+	}
+
+	inhibitorPlaces {| aBoolean = false |
+		^ this.prGetPlaces( inhibitorPlaces, aBoolean );
+	}
+
+	outputPlaces_ {| outputPlacesArray |
+		this.prSetIfNotNil( \outputPlaces, outputPlacesArray );
+	}
+
+	outputPlaces {| aBoolean = false |
+		^ this.prGetPlaces( outputPlaces, aBoolean );
+	}
+
+	prAdd {
+		all.put( name, this );
+	}
+
+	prSetIfNotNil {| aSymbol, aCollection |
+		if( aCollection.notNil ){
+			this.instVarPut( aSymbol , this.prCollectPlaceInstances( aCollection ) )
+		}
+	}
+
+	prCollectPlaceInstances {| aCollection |
+		^ aCollection.collect {| elem | 
+			if( elem.isKindOf( Symbol ) ){ 
+				PNPlaceN( elem );
+			}{
+				elem
+			}
+		}
+	}
+
+	prGetPlaces {| aCollection, aBoolean = false |
+		// aBoolean: if true, get symbols, otherwise get PNPlaceN instances
+		^ if( aBoolean ){
+			aCollection.collect {| elem | elem.name }
+		}{
+			aCollection
+		}
+	}
+
+// modify this method to avoid duplicate writings
+	informPlaces {
+		var instanceName = this.name, informFunc;
+		informFunc = {| aSelector1, aSelector2 | 
+			this.perform( aSelector1, false ).do {| place | place.perform( aSelector2 ).add( instanceName ) };
+		};
+		informFunc.( \inputPlaces, \isInputPlaceTo );
+		informFunc.( \outputPlaces, \isOutputPlaceTo );
+		informFunc.( \inhibitorPlaces, \isInhibitorPlaceTo );
+	}
+
+	fire {| aPetriNetN |
+		this.updateInputPlaces.( inputPlaces, aPetriNetN ); // args marking, currentTime ?
+		this.updateOutputPlaces.( outputPlaces, aPetriNetN );
+	}
+
+	isTimed { ^false }
+
+	isEnabled {
+		^enabledFunction.( inputPlaces, inhibitorPlaces )
+	}
+
+	neutralize {						// remove this method?
+		#inputPlaces, inhibitorPlaces, outputPlaces  = nil ! 3;
+		updateInputPlaces = updateInputPlacesDefault;
+		updateOutputPlaces = updateOutputPlacesDefault;
+	}
+
+	gui { | aWindow | }
+
+	printOn { arg stream;
+		stream << this.class.name << "( "<< this.name << " )";
 	}
 }
 
@@ -211,9 +366,9 @@ PNImmediateTransitionN {
 		this.inhibitorPlaces( false ).do {| place | place.isInhibitorPlaceTo.add( instanceName ) };
 	}
 
-	fire {| aSPetriNet |
-		this.updateInputPlaces.( inputPlaces, aSPetriNet ); // args marking, currentTime ?
-		this.updateOutputPlaces.( outputPlaces, aSPetriNet );
+	fire {| aPetriNetN |
+		this.updateInputPlaces.( inputPlaces, aPetriNetN ); // args marking, currentTime ?
+		this.updateOutputPlaces.( outputPlaces, aPetriNetN );
 	}
 
 	isTimed { ^false }
