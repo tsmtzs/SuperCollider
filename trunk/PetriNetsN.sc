@@ -256,87 +256,44 @@ PNTimedTransitionN : PNTransitionN {
 }
 
 PetriNetN {
-	classvar <>all;						// remove this classvar end the methods 'at', 'clearAll'?
 	var <places, <transitions, firingTransitions, oldTransitions, transitionsB1;
 	var newTransitions, immediateTransitions, enabledTransitions, unionOfB1;
 	var <currentTime, <>timeOffset, <holdingTime;
-	var <>name, <timeDurPairs, <task, <mediator;
-
-	*initClass {
-		all = IdentityDictionary.new;
-	}
-
-	*clearAll {
-		this.all.clear;
-	}
+	var <timeDurPairs;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
 // \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
 // \inhibitorPlaces: setOfInhibitorPlaces or nil, \updateInputPlaces: aFunction(optional),
 // \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
-	*new {| key ... dictionaries |
-		var petriNet;
-		petriNet = this.at( key );
-		if( petriNet.isNil ){
-			petriNet = super.new.prAdd( key ).init( dictionaries );
-		}{
-			if( dictionaries.notNil ){
-				petriNet.init( dictionaries )
-			}
-		};
-		^petriNet
+	*new {| ... dictionaries |
+		^ super.new.init( dictionaries );
 	}
 
-	// mediator_ {| aSPNMediator |
-	// 	mediator = aSPNMediator;
-	// 	this.transitions.do {| aSPNTransition |
-	// 		aSPNTransition.spnMediator_( mediator );
-	// 	};
-	// }
-
 	init {| dictionaries | 
-		var transition, dependants;
 		places = List[];
 		transitions = List[];
 		transitionsB1 = IdentityDictionary[];
 		dictionaries.do {| aDict |
-			this.prAddPlaces( aDict );
-			transition = this.prAddTransition( aDict );
-			[ \isTimed, \transition].do {| aSymbol | // insert this 3 lines in method 'prAddTransition?
-				aDict.removeAt( aSymbol );
-			};
-			// dependants = aDict.at( \dependants );
-			// if( dependants.notNil ){
-			// 	dependants.keysValuesDo {| key, val |
-			// 		transition.addDependant( key, val )
-			// 	};
-			// 	aDict.removeAt( \dependants );
-			// };
-			transition.performWithEnvir( \init, aDict );
+			this.prAddPlaces( aDict )
+			.prAddTransition( aDict );
 		}
-	}
-
-	*at { arg key;
-		^this.all.at(key)
-	}
-
-	prAdd {| argKey |
-		all.put( argKey, this );
-		name = argKey;
 	}
 
 	prAddTransition {| aDict |
 		var transition, transitionName, isTimed;
 		transitionName = aDict.at( \transition );
-		transition = PNImmediateTransitionN.at( transitionName );
+		transition = PNTransitionN.at( transitionName );
 		if( transition.isNil ){
-			isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
-			transition = [ PNImmediateTransitionN, PNTimedTransitionN ]
+			isTimed = aDict.at( \clock ).notNil or: { aDict.trueAt( \isTimed ) };
+			transition = [ PNTransitionN, PNTimedTransitionN ]
 			.at( isTimed.asInteger )
 			.basicNew( transitionName )
 		};
 		this.prAddToList( transitions, transition );
-		^transition;
+		[ \isTimed, \transition ].do {| aSymbol |
+			aDict.removeAt( aSymbol );
+		};
+		transition.performWithEnvir( \init, aDict );
 	}
 
 	prAddPlaces {| aDict |
@@ -348,10 +305,7 @@ PetriNetN {
 	prAddPlacesBasic {| anArray |
 		var place;
 		anArray.do {| aSymbol |
-			place = PNPlaceN.at( aSymbol );
-			if( place.isNil ){
-				place = PNPlaceN.new( aSymbol );
-			};
+			place = PNPlaceN( aSymbol );
 			this.prAddToList( places, place );
 		};
 	}
@@ -382,236 +336,14 @@ PetriNetN {
 			// from a class named SPNUtilities? This class will haave as methods all
 			// the private methods of PNPlaceN, PNImmediateTransitionN.
 			// Specifically, for this method you use the method 'prGetPlaces'
-			if( places.collect {| place | place.name }.includes( key ).not){ 
-				^ ("Petri net"+this.name.asString+", doesn't have place"+key.asString).error;
+			// if( places.collect {| place | place.name }.includes( key ).not ){ 
+			if( places.every( _.name != key ){
+				^ ( "Petri net"+this.name.asString+", doesn't have place"+key.asString ).error;
 			};
 			PNPlaceN( key, value );
 		};
-		^ Post<<"The new marking is\n\t "<<this.marking<<"\n";
+		^ Post << "The new marking is\n\t " << this.marking << "\n";
 	}
-
- // 	//is there a better approach for the following method? ( or better, its intent )
- // 	//put variable 'states' outside of this method in order to avoid recomputing its value
- // 	currentStateAsString {| showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
- // 		var string, states, stateName, stateValue;
- // 		states = thisMethod.argNames.drop(1);
- // 		string = "** A marking change occured:\n\t";
- // 		[showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings, showHoldingTime ]
- // 		.do {| aBoolean, i |
- // 			if( aBoolean ){
- // 				stateName = states[i].asString.drop(4);
- // 				stateName[0] = stateName[0].toLower;
- // 				stateValue = if( stateName == "marking" or: { stateName == "clockReadings"} ){
- // 					this.perform( stateName.asSymbol );
- // 				}{
- // 					//this 'if' is UNGLY. CHANGE IT
- // 					//you want stateName to collect the names of the transitions
- // 					if( stateName == "currentTime" or: { stateName == "holdingTime"} ){
- // 						this.instVarAt( stateName.asSymbol );
- // 					}{
- // 						this.instVarAt( stateName.asSymbol ).collect {| elem | elem.name }.asArray;
- // 					}
- // 				};
-
- // 			string = string ++ stateName ++":" + stateValue.asString ++ "\n\t"
- // 			};
- // 		};
- // 		^ string+"\n"
- // 	}
-
- // 	samplePathAlgorithm {| dur = 5, startTime = 0, aSelector ...moreArgs |
- // 	var endTime;
- // 	endTime = startTime + dur;
- // 		unionOfB1 ?? { this.makeB1 }; //maybe remove this line?
- // 	this.computeInitEnabledTransitions;
-
- // 	this.prSamplePathsBasic( startTime );
- // 		//	this.prSamplePathsWithPerform( startTime, \value ); // use this line and delete method 'prSamplePathsBasic' ?
-
- // 	("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
-
- // 	this.prSamplePathsWithPerform( endTime, aSelector, *moreArgs );
- // 	}
-
- // 	prSamplePathsBasic {| endTime |
- // 		while({ currentTime < endTime },{
- // 			this.computeFiringTransitions
- // 			.generateNewMarking
- // 			.nextMarkingChange
- // 			.computeOldTransitions
- // 			.computeNewTransitions
- // 			.zeroRemainingClocks
- // 		});
- // 	}
-
- // 	prSamplePathsWithPerform {| endTime, aSelector ...moreArgs |
- // 		while({ currentTime <= endTime },{
- // 			this.computeFiringTransitions
- // 			.perform( aSelector, *moreArgs )
- // 			.generateNewMarking
- // 			.nextMarkingChange
- // 			.computeOldTransitions
- // 			.computeNewTransitions
- // 			.zeroRemainingClocks
- // 		});
- // 	}
-
- // 	prTask {
- // 		var trans;
- // 		trans = transitions.as(Set);
- // 		task = Task({
- // 			"Please set the initial marking. Then call 'play'.".postln;
- // 			nil.yield;
- // 			this.computeInitEnabledTransitions;
-
- // 			loop {
- // 				this.computeFiringTransitions;
- // 				//.nextMarkingChange;
- // 				newTransitions.do {|e|
- // 					e.changed( \play )
- // 				};
- // 				( trans - enabledTransitions ).do {|e|
- // 					e.changed( \stop )
- // 				};
- // 				this.generateNewMarking
- // 				.computeOldTransitions
- // 				.computeNewTransitions
- // 				.zeroRemainingClocks;
-
- // 				holdingTime.wait;
- // 			};
- // 		})
- // 	}
-
- // 	play {| aClock, quant |
- // 		this.task.play( 
- // 			aClock ?? { TempoClock.default },
- // 			false, 
- // 			quant ?? { 0 }
- // 		);
- // 	}
-
- // 	start {| aClock, quant |
- // 		this.task.start(
- // 			aClock ?? { TempoClock.default },
- // 			quant ?? { 0 }
- // 		)
- // 	}
-
- // 	resume {| aClock, quant |
- // 		this.task.resume(
- // 			aClock ?? { TempoClock.default },
- // 			quant ?? { 0 }
- // 		)
- // 	}
-
- // 	pause {
- // 		this.task.pause;
- // 		// see 'stop' method for 'do' receiver 'transitions'
- // 		transitions.do {|e|
- // 			e.changed( \stop );
- // 		}
-
- // 	}
-
- // 	stop {
- // 		// var playingTrans;
- // 		// playingTrans = oldTransitions.union( newTransitions );
- // 		this.task.stop;
- // 		// change 'transitions' from the next do, to catch only playing transitions?
- // 		// For some reason, replacing 'transitions' with 'playingTrans' doesn't work
- // 		transitions.do {|e|
- // 			e.changed( \stop );
- // 		}
- // 	}
-
- // 	reset {
- // 		this.task.reset;
- // 	}
-
- // 	////////////////////////////////////////////////////////
- // 	// change the next 3 methods with something better. You want to perform many methods each one
- // 	// maybe with additional arguments
- // 	samplePathWithMultiPerform {| dur = 5, startTime = 0 ...selectors |
- // 	var endTime;
- // 	endTime = startTime + dur;
- // 		unionOfB1 ?? { this.makeB1 }; //maybe remove this line?
- // 	this.computeInitEnabledTransitions;
-
- // 	this.prSamplePathsBasic( startTime );
- // 		//	this.prSamplePathsWithPerform( startTime, \value ); // use this line and delete method 'prSamplePathsBasic' ?
-
- // 	("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
-
- // 	this.prSamplePathsWithMultiPerform( endTime, *selectors );
- // 	}
-
-
- // 	prSamplePathsWithMultiPerform {| endTime ...selectors |
- // 		while({ currentTime <= endTime },{
- // 			this.computeFiringTransitions
- // 			.multiPerform( *selectors )
- // 			.generateNewMarking
- // 			.nextMarkingChange
- // 			.computeOldTransitions
- // 			.computeNewTransitions
- // 			.zeroRemainingClocks
- // 		});
- // 	}
-
- // 	multiPerform {| ...selectors |
- // 		selectors.do {| aSymbol |
- // 			this.perform( aSymbol )
- // 		}
- // 	}
- // 	////////////////////////////////////////////////////////
-
- // 	putCurrentStateToFile {| aFile, showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
- // 	var string;
- // 	string = this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings,  showHoldingTime);
- // 	aFile.write( string );
- // 	}
-
- // 	postCurrentState{ |showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
- // 		Post<<this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings, showHoldingTime );
- // 	}
-
- // 	initTimeDurPairs {
- // 		timeDurPairs ?? {
- // 			timeDurPairs = transitions.collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );//or Event?
- // 			// keep only timed transitions?
- // 			// timeDurPairs = transitions.select {|trans| trans.isTimed}
- // 			// .collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );
- // 			^this
- // 		};
- // // maybe remove this line and keep the above without the conditional? Is it faster then?
- // 		timeDurPairs.do {|aList| aList.clear };
- // 	}
-
- // 	collectTimeDurPairs {
- // 		var list;
- // 		enabledTransitions.do {|e|
- // 			list = timeDurPairs.at( e.name );
- // 			case
- // 			{ newTransitions.includes( e ) }{
- // 				list.add( [ currentTime, holdingTime ] );
- // 			}
- // 			{ oldTransitions.includes( e ) }{
- // 				list.last[1] = list.last[1] + holdingTime;
- // 			}
- // 		}
- // 	}
-
- // 	/*
- // 	play {| from, to | // modify to select the pattern / s to play
- // 	}
-
- // 	writeOSCFile {| path, clock, from, to |
- // 	}
-
- // 	recordNRT {
- // 	}
- // 	*/
 }
 
 // PNMediatorN {
