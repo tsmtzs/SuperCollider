@@ -169,7 +169,7 @@ PNTransitionN {
 	}
 
 	prAdd {
-		all.put( name, this );
+		all.put( this.name, this );
 	}
 
 	prSetIfNotNil {| aSymbol, aCollection |
@@ -232,229 +232,24 @@ PNTransitionN {
 	}
 }
 
-PNImmediateTransitionN {
-	classvar <>all;
-	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
-	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
-	var <>clockSpeed, <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
-	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
-	var <>name, <>spnMediator;
-	var <clock = 0, <>clockReading; // clock is a function with first arg a SPetriNet, and clockReading is a value of this function
-	var <currentState;				// put this var in subclass SPNTimedTransition only?
+PNTimedTransitionN : PNTransitionN {
+	var <>clock, <>clockReading; // clock is a function with first arg a PetriNetN, and clockReading is a value of this function
+	var <>clockSpeed;				// a function. Remove this var, assuming that clock speed is 1?
+	var currentState;
 
-	*initClass{
-		all = IdentityDictionary.new;
-		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
-		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
-		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
-			//transition is enabled when all input places contain at least one token
-			//and all inhibitor places contain no tokens. The message asCollection added 
-			//to prevent nil sets of places
-			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.includes( false ).not 
-			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.includes( false ).not // if tokens is positive integer
-			and: 
-			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.includes( false ).not }
-		};
-		clockSpeedDefault = 1;
-	}
-
-	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
-		var transition;
-		transition = this.at( key );
-		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){ 
-			^("There are  common Places in InputPlaces and InhibitorPlaces of transition"+key.asString).error;
-		};
-		if( transition.isNil ){
-			transition = this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
-		}{
-			if(
-				[ inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed ].any {| elem | elem.notNil }
-			){
-				transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
-			}
-		}
-		^transition
-	}
-
-	// global storage
-	*at { arg key;
-		^this.all.at(key)
-	}
-
-	*clearAll {
-		this.all.clear;
-	}
-
-	*basicNew {| key |
-		^super.new
-		.prAdd( key )
-	}
-		
-	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
-		this.inputPlaces_( inputPlaces )
-		.inhibitorPlaces_( inhibitorPlaces )
-		.outputPlaces_( outputPlaces )
-		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) }  )
-		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
-		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } )
-		.clockSpeed_( clockSpeed ?? { clockSpeedDefault } )
-		.informPlaces;
-	}
-
-	inputPlaces_ {| inputPlacesSet |
-		this.prSetIfNotNil( \inputPlaces, inputPlacesSet );
-	}
-
-	inputPlaces {| aBoolean = false |
-		^ this.prGetPlaces( inputPlaces, aBoolean );
-	}
-
-	inhibitorPlaces_ {| inhibitorPlacesSet |
-		this.prSetIfNotNil( \inhibitorPlaces, inhibitorPlacesSet );
-	}
-
-	inhibitorPlaces {| aBoolean = false |
-		^ this.prGetPlaces( inhibitorPlaces, aBoolean );
-	}
-
-	outputPlaces_ {| outputPlacesSet |
-		this.prSetIfNotNil( \outputPlaces, outputPlacesSet );
-	}
-
-	outputPlaces {| aBoolean = false |
-		^ this.prGetPlaces( outputPlaces, aBoolean );
-	}
-
-	prAdd {| argKey |
-		all.put( argKey, this );
-		this.instVarPut( \name, argKey );
-	}
-
-	prSetIfNotNil {| aSymbol, aCollection |
-		if( aCollection.notNil ){
-			this.instVarPut( aSymbol , this.prCollectPlaceInstances( aCollection ) )
-		}
-	}
-
-	prCollectPlaceInstances {| aCollection |
-		var place;
-		^ aCollection.collect {| elem | 
-			if( elem.isKindOf( Symbol ) ){ 
-				place = PNPlaceN.at( elem );
-				if( place.isNil ){ place = PNPlaceN( elem ); };
-				place
-			}{
-				elem
-			}
-		}
-	}
-
-	prGetPlaces {| aCollection, aBoolean = false |
-		// aBoolean: if true, get symbols, otherwise get PNPlaceN instances
-		^ if( aBoolean ){
-			aCollection.collect {| elem | elem.name }
-		}{
-			aCollection
-		}
-	}
-
-// modify this method to avoid duplicate writings
-	informPlaces {
-		var instanceName = this.name;
-		this.inputPlaces( false ).do {| place | place.isInputPlaceTo.add( instanceName ) };
-		this.outputPlaces( false ).do {| place | place.isOutputPlaceTo.add( instanceName ) };
-		this.inhibitorPlaces( false ).do {| place | place.isInhibitorPlaceTo.add( instanceName ) };
-	}
-
-	fire {| aPetriNetN |
-		this.updateInputPlaces.( inputPlaces, aPetriNetN ); // args marking, currentTime ?
-		this.updateOutputPlaces.( outputPlaces, aPetriNetN );
-	}
-
-	isTimed { ^false }
-
-	isEnabled {
-		^enabledFunction.( inputPlaces, inhibitorPlaces )
-	}
-
-	neutralize {
-		#inputPlaces, inhibitorPlaces, outputPlaces  = nil ! 3;
-		updateInputPlaces = updateInputPlacesDefault;
-		updateOutputPlaces = updateOutputPlacesDefault;
-	}
-
-	gui { | aWindow | }
-
-	printOn { arg stream;
-		stream << this.class.name << "( "<< this.name << " )";
-	}
-
-	// // override dependancy support
-	// dependants {
-	// 	^dependantsDictionary.at(this) ?? { IdentityDictionary.new };
-	// }
-	// changed {| what ... moreArgs |
-	// 	spnMediator.transitionChanged( this, what, *moreArgs );
-	// }
-	// addDependant { | key, dependant |
-	// 	var theDependants;
-	// 	// for the next line:
-	// 	// write instent 'event.copy' in collect?
-	// 	// add an 'if' in order to collect conditionaly the currentState?
-	// 	// It is asumed that 'dependant' is a Pdef with Pbind as source. What if is something alse?
-	// 	//		dependant.source = dependant.source.collect {| event | currentState = event; event.postln }; // <++++++++++++++++++++
-	// 	theDependants = dependantsDictionary.at(this);
-	// 	if(theDependants.isNil,{
-	// 		theDependants = IdentityDictionary.new.put( key, dependant );
-	// 		dependantsDictionary.put(this, theDependants);
-	// 	},{
-	// 		theDependants.put( key, dependant );
-	// 	});
-	// }
-	// removeDependant {| key |
-	// 	var theDependants;
-	// 	theDependants = dependantsDictionary.at(this);
-	// 	if (theDependants.notNil, {
-	// 		theDependants.removeAt( key );
-	// 		if (theDependants.size == 0, {
-	// 			dependantsDictionary.removeAt(this);
-	// 		});
-	// 	});
-	// }
-
-}
-
-PNTimedTransitionN : PNImmediateTransitionN {
-	classvar <clockFunctionDefault;
-
-	*initClass {
-		clockFunctionDefault = 1;
-	}
-
-	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, clock, updateInputPlaces, updateOutputPlaces,  enabledFunction, clockSpeed |
-		^super.new( key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed, clock )
-		// is this well writen? 'super' doesn't have a 'clock' arg
-	}
-
-	*basicNew {| key |
-		^super.basicNew( key )
-		.instVarPut(\clock, clockFunctionDefault )
-	}
-
-	init {| inputPlaces, outputPlaces, inhibitorPlaces,  updateInputPlaces, updateOutputPlaces,  enabledFunction, clockSpeed, clock |
-		^super.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces,  enabledFunction, clockSpeed )
-		.clock_( clock ?? { clockFunctionDefault } );
-	}
-
-	clock_ {| aFunction |
-		clock = aFunction;
+	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, clock, updateInputPlaces, updateOutputPlaces,  enabledFunction, clock, clockSpeed |
+		^super.new( key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
+		.clock_( clock ?? { 0 } )		// a clock with value 0 gives an immediate transition
+		.clockSpeed_( clockSpeed ?? { 1 } )
 	}
 
 	isTimed { ^true }
+	isImmediate { ^ if( clock == 0 ){ true }{ false } }
 
 	neutralize {
-		super.neutralize;
-		this.clock_( clockFunctionDefault );
+		super.neutralize
+		.clock_( 0 )					// 0 for immediate transition
+		.clockSpeed_( 1 )
 	}
 
 	gui {| aWindow | }
