@@ -441,3 +441,47 @@ PNSamplePath {
 	}
 	//end of algorithm	
 }
+
+PNPatternN : Pattern {
+	var petriNet, dictionary, length, samplePath; // change the name of dictionary?
+
+	*new {| aPetriNet, aDictionary, length = inf |
+		^ super.newCopyArgs( aPetriNet, aDictionary.copy, length ).init // replace copy method with something else?
+	}
+
+	init {
+		dictionary = dictionary.keysValuesChange {| key, val | val.asStream };
+	}
+
+	storeArgs { ^ [ petriNet, dictionary, length ] }
+
+	embedInStream {| inval |
+		var samplePath, transitions;
+
+		samplePath = PNSamplePath( petriNet.copy ); // remove message 'copy' ?
+
+		samplePath.computeInitEnabledTransitions;
+
+		length.value.do {
+			samplePath.computeFiringTransitions
+			.nextMarkingChange;
+
+			// transitions = samplePath.newTransitions; // get only new transitions
+			transitions = samplePath.newTransitions.union( samplePath.oldTransitions ); // get new and old transitions
+
+			inval = transitions.collect {|e|
+				dictionary.at( e.name ).next( inval )
+			}.asArray;
+
+			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
+
+			inval = inval.yield;
+
+			samplePath.generateNewMarking
+			.computeOldTransitions
+			.computeNewTransitions
+			.zeroRemainingClocks;
+		};
+		^inval
+	}
+}
