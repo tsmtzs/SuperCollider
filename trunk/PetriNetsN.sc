@@ -79,11 +79,11 @@ PNPlaceN {
 
 PNTransitionN {
 	classvar <>all;
-	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
+	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
 	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
-	var <>name, <>spnMediator;
+	var <>name;
 	var <currentState;				// put this var in subclass SPNTimedTransition only?
 
 	*initClass{
@@ -94,10 +94,10 @@ PNTransitionN {
 			//transition is enabled when all input places contain at least one token
 			//and all inhibitor places contain no tokens. The message asCollection added 
 			//to prevent nil sets of places
-			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.every( _ == true )
-			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.every( _ == true ) // if tokens is positive integer
+			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.every({| elem | elem == true })
+			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.every({| elem | elem == true }) // if tokens is positive integer
 			and: 
-			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.every( _ == true ) }
+			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.every({| elem | elem  == true }) }
 		};
 	}
 
@@ -213,8 +213,6 @@ PNTransitionN {
 		this.updateOutputPlaces.( outputPlaces, aPetriNetN );
 	}
 
-	isTimed { ^false }
-
 	isEnabled {
 		^enabledFunction.( inputPlaces, inhibitorPlaces )
 	}
@@ -232,34 +230,9 @@ PNTransitionN {
 	}
 }
 
-PNTimedTransitionN : PNTransitionN {
-	var <>clock, <>clockReading; // clock is a function with first arg a PetriNetN, and clockReading is a value of this function
-	var <>clockSpeed;				// a function. Remove this var, assuming that clock speed is 1?
-	var currentState;
-
-	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, clock, updateInputPlaces, updateOutputPlaces,  enabledFunction, clock, clockSpeed |
-		^super.new( key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
-		.clock_( clock ?? { 0 } )		// a clock with value 0 gives an immediate transition
-		.clockSpeed_( clockSpeed ?? { 1 } )
-	}
-
-	isTimed { ^true }
-	isImmediate { ^ if( clock == 0 ){ true }{ false } }
-
-	neutralize {
-		super.neutralize
-		.clock_( 0 )					// 0 for immediate transition
-		.clockSpeed_( 1 )
-	}
-
-	gui {| aWindow | }
-}
-
 PetriNetN {
 	var <places, <transitions, firingTransitions, oldTransitions;
 	var newTransitions, immediateTransitions, enabledTransitions;
-	var <currentTime, <>timeOffset, <holdingTime;
-	var <timeDurPairs;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
 // \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
@@ -316,10 +289,6 @@ PetriNetN {
 	marking {
 		^ this.prCollectAsEvent( places, \name, \tokens )
 	}
-	
-	clockReadings {
-		^ this.prCollectAsEvent( transitions, \name, \clockReading )
-	}
 
 	prCollectAsEvent {| aCollection, aSelectorA, aSelectorB |
 		^ aCollection.collect {| anObject |
@@ -336,12 +305,13 @@ PetriNetN {
 			// the private methods of PNPlaceN, PNImmediateTransitionN.
 			// Specifically, for this method you use the method 'prGetPlaces'
 			// if( places.collect {| place | place.name }.includes( key ).not ){ 
-			if( places.every( _.name != key ){
+			if( places.every({| p | p.name != key }) ){
 				^ ( "Petri net"+this.name.asString+", doesn't have place"+key.asString ).error;
 			};
 			PNPlaceN( key, value );
 		};
-		^ Post << "The new marking is\n\t " << this.marking << "\n";
+		^ Post<< "The new marking is\n\t " << this.marking << "\n";
+		
 	}
 }
 
@@ -349,7 +319,7 @@ PNSamplePath {
 	var >petriNet;
 	// add setter - getter methods?
 	var <transitions, <enabledTransitions, <oldTransitions, <newTransitions, <firingTransitions;
-	var <unionOfB1, <currentTime, <holdingTime;
+	var <unionOfB1;
 
 	*new {| aPetriNetN |
 		^ super.new.petriNet_( aPetriNetN ).init
@@ -379,65 +349,17 @@ PNSamplePath {
 	//the algorithm to generate a sample for the underlying process of the PetriNetN
 	// from Chapter 3 of "Stochastic Petri Nets: Modelling, Stability, Simulation" by Peter Haas
 	//step 1:
-	computeInitEnabledTransitions {
-		currentTime = 0;//timeOffset
+	computeEnabledTransitions {
 		enabledTransitions = Set[];
-		oldTransitions = Set[];
-		newTransitions = Set[];			// remove this line? dublicates with the last line
 		transitions.do {| e |
 			if( e.isEnabled ){ 
 				enabledTransitions.add( e );
-				e.clockReading = e.clock.value( this );
-			}{
-				e.clockReading = 0;
-			};
+			}
 		};
-		newTransitions = enabledTransitions;
-	}
-	//step 2:
-	computeFiringTransitions {
-		if( enabledTransitions.isEmpty ){ 
-			^ Error("There are no enabled transitions in petri net"+this.name.asString).throw; 
-		};
-		holdingTime = enabledTransitions.collect{|e| e.clockReading }.minItem;
-		firingTransitions = enabledTransitions.select {|e|
-			e.clockReading == holdingTime;
-		};
-	}
-	//step 3:
-	nextMarkingChange {
-		currentTime = currentTime + holdingTime;
 	}
 	//step 4:
 	generateNewMarking {
-		firingTransitions.do {|e| e.fire( this ); }
-	}
-	//step 5:
-	computeOldTransitions {
-		oldTransitions.clear;
-		( enabledTransitions - firingTransitions ).do {|e|
-			if( e.isEnabled ){
-				oldTransitions.add( e );
-				e.clockReading = e.clockReading - ( holdingTime * e.clockSpeed.value( this ) );
-			}
-		}
-	}
-	//step 6:
-	computeNewTransitions {
-		newTransitions.clear;
-		( unionOfB1 - oldTransitions ).do {|e|
-			if( e.isEnabled ){
-				newTransitions.add( e );
-				e.clockReading = e.clock.value( this );
-			};
-		};
-		enabledTransitions = oldTransitions.union( newTransitions );
-	}
-	//step 7:
-	zeroRemainingClocks {
-		( transitions.as(Set) - enabledTransitions ).do {|e|
-			e.clockReading = 0;
-		}
+		enabledTransitions.do {|e| e.fire( this ); }
 	}
 	//end of algorithm	
 }
@@ -463,8 +385,9 @@ PNPatternN : Pattern {
 		samplePath.computeInitEnabledTransitions;
 
 		length.value.do {
-			samplePath.computeFiringTransitions
-			.nextMarkingChange;
+			samplePath.computeEnabledTransitions
+			.computeFiringTransitions
+			.generateNewMarking;
 
 			// transitions = samplePath.newTransitions; // get only new transitions
 			transitions = samplePath.newTransitions.union( samplePath.oldTransitions ); // get new and old transitions
@@ -475,13 +398,8 @@ PNPatternN : Pattern {
 
 			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
 
-			inval = inval.yield;
-
-			samplePath.generateNewMarking
-			.computeOldTransitions
-			.computeNewTransitions
-			.zeroRemainingClocks;
-		};
+			inval = inval.yield;			
+			};
 		^inval
 	}
 }
