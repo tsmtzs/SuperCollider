@@ -256,8 +256,8 @@ PNTimedTransitionN : PNTransitionN {
 }
 
 PetriNetN {
-	var <places, <transitions, firingTransitions, oldTransitions, transitionsB1;
-	var newTransitions, immediateTransitions, enabledTransitions, unionOfB1;
+	var <places, <transitions, firingTransitions, oldTransitions;
+	var newTransitions, immediateTransitions, enabledTransitions;
 	var <currentTime, <>timeOffset, <holdingTime;
 	var <timeDurPairs;
 
@@ -272,7 +272,6 @@ PetriNetN {
 	init {| dictionaries | 
 		places = List[];
 		transitions = List[];
-		transitionsB1 = IdentityDictionary[];
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict )
 			.prAddTransition( aDict );
@@ -346,52 +345,35 @@ PetriNetN {
 	}
 }
 
-// PNMediatorN {
-// 	var <>show;
-
-// 	*new {| ...aSymbol |
-// 		^super.newCopyArgs( aSymbol )
-// 	}
-
-// 	transitionChanged {| aSPNTransition, what ...moreArgs |
-// 		show.do {| aSymbol | 
-// 			aSPNTransition.dependants.at( aSymbol ).perform( what, *moreArgs );
-// 		}
-// 	}
-// }
-
-PNSamplePathN {
+PNSamplePath {
 	var >petriNet;
 	// add setter - getter methods?
 	var <transitions, <enabledTransitions, <oldTransitions, <newTransitions, <firingTransitions;
-	var unionOfB1, <currentTime, <holdingTime;
+	var <unionOfB1, <currentTime, <holdingTime;
 
 	*new {| aPetriNetN |
-		^ super.new.petriNet_( aPetriNet ).init
+		^ super.new.petriNet_( aPetriNetN ).init
 	}
 
 	init {
 		transitions = petriNet.transitions.array.copy;
+		this.makeB1;
 	}
 
-	// delete instance variable 'transitionsB1' ?
 	makeB1 {
 		var transName;
 		unionOfB1 = Set[];
 		transitions.do {| transition |
 			transName = transition.name;
-			// transitionsB1.put( transName, [] );
 			transitions.do {| trans |
 				if( 
-					(transition.outputPlaces.as(Set) & trans.inputPlaces.as(Set) ).isEmpty.not 
+					( transition.outputPlaces.as(Set) & trans.inputPlaces.as(Set) ).notEmpty 
 					or: 
-					{(transition.inputPlaces.as(Set) & trans.inhibitorPlaces.as(Set) ).isEmpty.not} ){ 
-						// transitionsB1.at( transName ).add( trans );
+					{ ( transition.inputPlaces.as(Set) & trans.inhibitorPlaces.as(Set) ).notEmpty } ){ 
 						unionOfB1.add( trans );
 					};
 			};
 		};
-		// unionOfB1 = transitionsB1.inject( Set[], _.union( _ ) );//change method with reduce
 	}
 
 	//the algorithm to generate a sample for the underlying process of the PetriNetN
