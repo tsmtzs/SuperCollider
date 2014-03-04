@@ -64,73 +64,19 @@ PNTransitionN {
 
 	*new { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){ 
-			( "There are  common Places in InputPlaces and InhibitorPlaces of transition" + key.asString ).error;
+			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-			^super.newCopyArgs( 
-				inputPlaces, 
-				outputPlaces, 
-				inhibitorPlaces, 
-				updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) }, 
-				updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) }, 
-				enabledFunction ?? { enabledFunctionDefault }
-			);
+			^super.new.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces,	updateOutputPlaces,	enabledFunction );
 	}
 
-
-	// *basicNew {| key |
-	// 	^super.new
-	// 	.instVarPut( \name, key )
-	// 	.prAdd
-	// }
-
-	// inputPlaces_ {| inputPlacesArray |
-	// 	this.prSetIfNotNil( \inputPlaces, inputPlacesArray );
-	// }
-
-	// inputPlaces {| aBoolean = false |
-	// 	^ this.prGetPlaces( inputPlaces, aBoolean );
-	// }
-
-	// inhibitorPlaces_ {| inhibitorPlacesArray |
-	// 	this.prSetIfNotNil( \inhibitorPlaces, inhibitorPlacesArray );
-	// }
-
-	// inhibitorPlaces {| aBoolean = false |
-	// 	^ this.prGetPlaces( inhibitorPlaces, aBoolean );
-	// }
-
-	// outputPlaces_ {| outputPlacesArray |
-	// 	this.prSetIfNotNil( \outputPlaces, outputPlacesArray );
-	// }
-
-	// outputPlaces {| aBoolean = false |
-	// 	^ this.prGetPlaces( outputPlaces, aBoolean );
-	// }
-
-	// prSetIfNotNil {| aSymbol, aCollection |
-	// 	if( aCollection.notNil ){
-	// 		this.instVarPut( aSymbol , this.prCollectPlaceInstances( aCollection ) )
-	// 	}
-	// }
-
-	// prCollectPlaceInstances {| aCollection |
-	// 	^ aCollection.collect {| elem | 
-	// 		if( elem.isKindOf( Symbol ) ){ 
-	// 			PNPlaceN( elem );
-	// 		}{
-	// 			elem
-	// 		}
-	// 	}
-	// }
-
-	// prGetPlaces {| aCollection, aBoolean = false |
-	// 	// aBoolean: if true, get symbols, otherwise get PNPlaceN instances
-	// 	^ if( aBoolean ){
-	// 		aCollection.collect {| elem | elem.name }
-	// 	}{
-	// 		aCollection
-	// 	}
-	// }
+	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+		this.inputPlaces_( inputPlaces )
+		.outputPlaces_( outputPlaces )
+		.inhibitorPlaces_( inhibitorPlaces )
+		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) } ) 
+		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
+		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } );
+	}
 
 // modify this method to avoid duplicate writings
 	// informPlaces {
@@ -166,7 +112,7 @@ PNTransitionN {
 }
 
 PetriNetN {
-	var places, transitions, <graph;
+	var places, transitions, <transitionData;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
 // \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
@@ -175,26 +121,30 @@ PetriNetN {
 	*new {| ... dictionaries |
 		^ super.new.init( dictionaries );
 	}
-
+	// is there a better data structure for the following?
 	init {| dictionaries | 
 		places = IdentityDictionary[];
 		transitions = IdentityDictionary[];
-		graph = dictionaries;
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict )
 			.prAddTransition( aDict );
-		}
+		};
+		transitionData = Dictionary.newFrom(
+			dictionaries.collect {| aDict |
+				[ aDict.removeAt( \transition ), aDict ]
+			}.flat
+		)
 	}
 
 	prAddTransition {| aDict |
 		var transitionName;
 		transitionName = aDict.at( \transition );
 		// this.prAddToDict( transitions, transitionName, PNTransitionN.performWithEnvir( aDict ) );
-		transitions.put( transitionName, PNTransitionN.performWithEnvir( \new, aDict ) );
+		transitions.put( transitionName, PNTransitionN.performWithEnvir( \init, aDict ) );
 	}
 
 	prAddPlaces {| aDict |
-		[ \inputPlaces, \inhibitorPlaces, \outputPlaces ].do { | aSymbol|
+		[ \inputPlaces, \inhibitorPlaces, \outputPlaces ].do { | aSymbol |
 			this.prAddPlacesBasic( aDict.at( aSymbol ) );
 		}
 	}
@@ -212,20 +162,20 @@ PetriNetN {
 	}
 
 	places {| onlyNames = true |
-		^ if( onlyNames ){
-			places.keys.as( Array )
-		}{
-		places.getPairs.as( Event )
-		}
+		^ this.prGetObjects( places, onlyNames )
 	}
 
 	transitions {| onlyNames = true |
-		^ if( onlyNames ){
-			transitions.keys.as( Array )
-		}{
-		transitions.getPairs.as( Event )
-		}
+		^ this.prGetObjects( transitions, onlyNames )
 	}	
+
+	prGetObjects { | aDictionary, aBoolean |
+		^ if( aBoolean ){
+			aDictionary.keys.as( Array )
+		}{
+			aDictionary.getPairs.as( Event )
+		}
+	}
 
 	marking {
 		^ places.collect {| place | place.tokens }.as(Event)
@@ -233,96 +183,116 @@ PetriNetN {
 
 	setMarking {| anIdentityDictionary |
 		anIdentityDictionary.keysValuesDo {| key, val |
-			if( places.includesKey( key ){
+			if( places.includesKey( key ) ){
 				places.at( key ).tokens_( val )
-			}	
+			}
 		};
-			^ Post<< "The new marking is\n\t " << this.marking << "\n";
-			
-		}
+		^ Post<< "The new marking is\n\t " << this.marking << "\n";
 	}
 
-	outputPlacesOf {| aSymbol | }
+	inputPlacesOf {| aSymbol | ^transitionData.at( aSymbol ).at( \inputPlaces ) }
+	outputPlacesOf {| aSymbol | ^transitionData.at( aSymbol ).at( \outputPlaces ) }
+	inhibitorPlacesOf {| aSymbol | ^transitionData.at( aSymbol ).at( \inhibitorPlaces ) }
+
 }
 
 PNSamplePath {
 	var >petriNet;
 	// add setter - getter methods?
 	var <transitions, <enabledTransitions;
-	var <unionOfB1;
+	var <b1;
 
 	*new {| aPetriNetN |
 		^ super.new.petriNet_( aPetriNetN ).init
 	}
 
 	init {
-		transitions = petriNet.transitions;
+		transitions = petriNet.transitions.keys.asArray;
+		b1 = IdentityDictionary[];
 		this.makeB1;
 	}
 
 	makeB1 {
-		var transName;
+		var unionOfB1;					// change this name
+		b1.clear;
 		unionOfB1 = Set[];
 		transitions.do {| transition |
-			transName = transition.name;
+			unionOfB1.clear;
 			transitions.do {| trans |
 				if( 
-					( transition.outputPlaces.as(Set) & trans.inputPlaces.as(Set) ).notEmpty 
+					( petriNet.outputPlacesOf( transition ).as(Set) & petriNet.inputPlacesOf( trans ).as(Set) ).notEmpty 
 					or: 
-					{ ( transition.inputPlaces.as(Set) & trans.inhibitorPlaces.as(Set) ).notEmpty } ){ 
+					{ ( petriNet.inputPlacesOf( transition ).as(Set) & petriNet.inhibitorPlacesOf( trans ).as(Set) ).notEmpty } ){ 
 						unionOfB1.add( trans );
 					};
 			};
+			if( unionOfB1.notEmpty ){ b1.put( transition, unionOfB1.asArray ) };
 		};
 	}
 
 	//the algorithm to generate a sample for the underlying process of the PetriNetN
 	// from Chapter 3 of "Stochastic Petri Nets: Modelling, Stability, Simulation" by Peter Haas
 	//step 1:
-	computeEnabledTransitions {
+	computeInitEnabledTransitions {
 		enabledTransitions = Set[];
-		transitions.do {| e |
-			if( e.isEnabled ){ 
-				enabledTransitions.add( e );
+		transitions.do {| aSymbol |
+			if( petriNet.transitions.at( aSymbol ).isEnabled ){ 
+				enabledTransitions.add( aSymbol );
+			}
+		};
+	}		
+	computeEnabledTransitions {
+		var candidateTrans;				// make this an instance var? is it significantly faster?
+		candidateTrans = b1.select {| value, key |
+			enabledTransitions.includes( key )
+		}
+		.values.flat.asSet;
+		enabledTransitions.clear;
+		candidateTrans.do {| aSymbol |
+			if( petriNet.transitions.at( aSymbol ).isEnabled ){ 
+				enabledTransitions.add( aSymbol );
 			}
 		};
 	}
 	//step 4:
 	generateNewMarking {
-		enabledTransitions.do {|e| e.fire( this ); }
+		enabledTransitions.do {| aSymbol | petriNet.transitions.at( aSymbol ).fire( this ); }
 	}
 	//end of algorithm	
 }
 
 PNPatternN : Pattern {
-	var petriNet, dictionary, length, samplePath; // change the name of dictionary?
+	var petriNet, dictionary, length, marking, samplePath; // change the name of dictionary?
 
-	*new {| aPetriNet, aDictionary, length = inf |
-		^ super.newCopyArgs( aPetriNet, aDictionary.copy, length ).init // replace copy method with something else?
+	*new {| aPetriNet, aDictionary, length = inf, marking |
+		^ super.newCopyArgs( aPetriNet, aDictionary, length, marking ).init // replace copy method with something else?
 	}
 
 	init {
 		dictionary = dictionary.keysValuesChange {| key, val | val.asStream };
+		if( marking.notNil ){ petriNet.setMarking( marking ) };
 	}
 
-	storeArgs { ^ [ petriNet, dictionary, length ] }
+	storeArgs { ^ [ petriNet, dictionary, length, marking ] }
 
 	embedInStream {| inval |
 		var samplePath, transitions;
 
-		samplePath = PNSamplePath( petriNet ); // remove message 'copy' ?
+		samplePath = PNSamplePath( petriNet );
+
+		samplePath.computeInitEnabledTransitions;
 
 		length.value.do {
-			samplePath.computeEnabledTransitions
-			.generateNewMarking;
-
-			inval = samplePath.enabledTransitions.collect {|e|
-				dictionary.at( e.name ).next( inval )
+			inval = samplePath.enabledTransitions.collect {| aSymbol |
+				dictionary.at( aSymbol ).next( inval ) // or use embedInStream?
 			}.asArray;
 
 			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
 
-			inval = inval.yield;			
+			inval = inval.yield;
+
+			samplePath.generateNewMarking
+			.computeEnabledTransitions;
 			};
 		^inval
 	}
