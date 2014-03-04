@@ -1,10 +1,22 @@
 // $LastChangedDate$
 // $Rev$
 PNPlaceN {
-	var <tokens;
+	var <tokens, <>name, <>pnEnvironment;
 
-	*new {| anInteger |
-		^super.newCopyArgs( anInteger ?? { 0 } );
+	*new {| key, anInteger, anEnvir |
+		var place, envir;
+		envir = anEnvir ?? { topEnvironment }; // maybe exclude topEnvironment?
+		place = envir.at( key );
+		if( place.isNil ){
+			place = super.newCopyArgs( anInteger ?? { 0 }, key, envir ).init;
+		}{
+			if( anInteger.notNil ){ place.tokens_( anInteger ) }
+		};
+		^ place
+	}
+
+	init {
+		pnEnvironment.put( name, this );
 	}
 
 	tokens_ { | anInteger |
@@ -31,7 +43,7 @@ PNPlaceN {
 	gui {| aWindow | }
 
 	printOn { arg stream;
-		stream << this.class.name << "( " << tokens  << " )";
+		stream << this.class.name << "( " << name <<" , " << tokens  << " )";
 	}
 
 // Modify method warning so that it can print or not the message?
@@ -42,11 +54,15 @@ PNPlaceN {
 	}
 }
 
+// look again instance method 'pnEnvironment'
+// discriminate between places and transitions?
+// if a place and a transition have the same name, one is ovewriten
+
 PNTransitionN {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
-	var <>inputPlaces, <>outputPlaces, <>inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
+	var <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
-	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
+	var <>enabledFunction, <>pnEnvironment;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 
 	*initClass{
 		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
@@ -62,12 +78,28 @@ PNTransitionN {
 		};
 	}
 
-	*new { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
-		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){ 
+	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, anEnvir |
+		var transition, envir;
+		// look again this message - symbols - places
+		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
 			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-			^super.new.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces,	updateOutputPlaces,	enabledFunction );
+		envir = anEnvir ?? { topEnvironment };
+		transition = envir.at( key );
+		if( transition.isNil ){
+			transition = super.basicNew( key, envir )
+			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+		}{
+			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+		}
 	}
+
+	basicNew {| aSymbol, anEnvir |
+		pnEnvironment = anEnvir;		// move this line in the *new method? use 'instVarPut'
+		pnEnvironment.put( aSymbol, this );
+		name = aSymbol;
+	}
+		
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
@@ -78,16 +110,45 @@ PNTransitionN {
 		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } );
 	}
 
-// modify this method to avoid duplicate writings
-	// informPlaces {
-	// 	var instanceName = this.name, informFunc;
-	// 	informFunc = {| aSelector1, aSelector2 | 
-	// 		this.perform( aSelector1, false ).do {| place | place.perform( aSelector2 ).add( instanceName ) };
-	// 	};
-	// 	informFunc.( \inputPlaces, \isInputPlaceTo );
-	// 	informFunc.( \outputPlaces, \isOutputPlaceTo );
-	// 	informFunc.( \inhibitorPlaces, \isInhibitorPlaceTo );
-	// }
+	inputPlaces_ {| aCollection |
+		inputPlaces = this.prCollectPlaceInstances( aCollection )
+	}
+
+	inputPlaces {| aBoolean = false | ^ this.prGetPlaces( inputPlaces, aBoolean ) }
+
+	outputPlaces_ {| aCollection |
+		outputPlaces = this.prCollectPlaceInstances( aCollection )
+	}
+
+	outputPlaces {| aBoolean = false | ^ this.prGetPlaces( outputPlaces, aBoolean ) }
+
+	inhibitorPlaces_ {| aCollection |
+		inhibitorPlaces = this.prCollectPlaceInstances( aCollection )
+	}
+
+	inhibitorPlaces {| aBoolean = false | ^ this.prGetPlaces( inhibitorPlaces, aBoolean ) }
+
+	prCollectPlaceInstances {| aCollection |
+		var place;
+		^ aCollection.collect {| elem | 
+			if( elem.isKindOf( Symbol ) ){ // modify to pass tokens after name e.x [ \p0, 10, \p1, \p2]
+				place = pnEnvironment.at( elem );
+				if( place.isNil ){ place = PNPlaceN( elem, pnEnvironment: pnEnvironment ); };
+				place
+			}{
+				elem
+			}
+		}
+	}
+
+	prGetPlaces {| aCollection, aBoolean = false |
+		// aBoolean: if true, get symbols, otherwise get SPNPlace instances
+		^ if( aBoolean ){
+			aCollection.collect {| elem | elem.name }
+		}{
+			aCollection
+		}
+	}
 
 	fire {| aPetriNetN |
 		this.updateInputPlaces.( inputPlaces, aPetriNetN ); // args marking, currentTime ?
@@ -112,7 +173,8 @@ PNTransitionN {
 }
 
 PetriNetN {
-	var places, transitions, <transitionData;
+	var <places, <transitions;
+	var <pnEnvironment;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
 // \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
@@ -122,25 +184,21 @@ PetriNetN {
 		^ super.new.init( dictionaries );
 	}
 	// is there a better data structure for the following?
-	init {| dictionaries | 
-		places = IdentityDictionary[];
-		transitions = IdentityDictionary[];
+	init {| dictionaries |
+		pnEnvironment = Environment[];
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict )
 			.prAddTransition( aDict );
 		};
-		transitionData = Dictionary.newFrom(
-			dictionaries.collect {| aDict |
-				[ aDict.removeAt( \transition ), aDict ]
-			}.flat
-		)
+		places = pnEnvironment.select {| value, key | value.isKindOf( PNPlaceN ) }.as(Event);
+		transitions = pnEnvironment.select {| value, key | value.isKindOf( PNTransitionN ) }.as(Event)
 	}
 
 	prAddTransition {| aDict |
-		var transitionName;
-		transitionName = aDict.at( \transition );
-		// this.prAddToDict( transitions, transitionName, PNTransitionN.performWithEnvir( aDict ) );
-		transitions.put( transitionName, PNTransitionN.performWithEnvir( \init, aDict ) );
+		var dict;
+		dict = aDict;
+		dict.put( \pnEnvironment, pnEnvironment );
+		PNTransitionN.performWithEnvir( \new, dict );
 	}
 
 	prAddPlaces {| aDict |
@@ -152,8 +210,7 @@ PetriNetN {
 	prAddPlacesBasic {| anArray |
 		var place;
 		anArray.do {| aSymbol |
-			place = PNPlaceN.new;
-			this.prAddToDict( places, aSymbol, place );
+			place = PNPlaceN( aSymbol, 0, pnEnvironment );
 		};
 	}
 
@@ -161,24 +218,28 @@ PetriNetN {
 		if( aDict.includesKey( aSymbol ).not ){ aDict.put( aSymbol, anObject ); }
 	}
 
-	places {| onlyNames = true |
-		^ this.prGetObjects( places, onlyNames )
-	}
+	// places {| onlyNames = true |
+	// 	^ this.prGetObjects( PNPlaceN, onlyNames )
+	// }
 
-	transitions {| onlyNames = true |
-		^ this.prGetObjects( transitions, onlyNames )
-	}	
+	// transitions {| onlyNames = true |
+	// 	^ this.prGetObjects( PNTransitionN, onlyNames )
+	// }	
 
-	prGetObjects { | aDictionary, aBoolean |
-		^ if( aBoolean ){
-			aDictionary.keys.as( Array )
-		}{
-			aDictionary.getPairs.as( Event )
-		}
-	}
+	// prGetObjects {|  class, onlyNames = true |
+	// 	var post;
+	// 	post = pnEnvironment.select {| value, key |
+	// 		value.isKindOf( class }
+	// 	};
+	// 	^ if( onlyNames ){
+	// 		post.keys
+	// 	}{
+	// 		post.as(Event)
+	// 	}
+	// }
 
 	marking {
-		^ places.collect {| place | place.tokens }.as(Event)
+		^ this.places.collect {| place | place.tokens }
 	}
 
 	setMarking {| anIdentityDictionary |
@@ -190,9 +251,9 @@ PetriNetN {
 		^ Post<< "The new marking is\n\t " << this.marking << "\n";
 	}
 
-	inputPlacesOf {| aSymbol | ^transitionData.at( aSymbol ).at( \inputPlaces ) }
-	outputPlacesOf {| aSymbol | ^transitionData.at( aSymbol ).at( \outputPlaces ) }
-	inhibitorPlacesOf {| aSymbol | ^transitionData.at( aSymbol ).at( \inhibitorPlaces ) }
+	inputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inputPlaces }
+	outputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).outputPlaces }
+	inhibitorPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inhibitorPlaces }
 
 }
 
