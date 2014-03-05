@@ -1,7 +1,7 @@
 // $LastChangedDate$
 // $Rev$
 PNPlaceN {
-	var <tokens, <>name, <>pnEnvironment;
+	var <tokens, <>name, <>pnEnvironment; // don't store Environment in a variable?
 
 	*new {| key, anInteger, anEnvir |
 		var place, envir;
@@ -57,6 +57,9 @@ PNPlaceN {
 // look again instance method 'pnEnvironment'
 // discriminate between places and transitions?
 // if a place and a transition have the same name, one is ovewriten
+// OR
+// don't store pnEnvironment in each instance. Just pass it over so that an instance
+// can regist in the Environment
 
 PNTransitionN {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
@@ -87,21 +90,22 @@ PNTransitionN {
 		envir = anEnvir ?? { topEnvironment };
 		transition = envir.at( key );
 		if( transition.isNil ){
-			transition = super.basicNew( key, envir )
+			transition = this.basicNew( key, envir )
 			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
 		}{
 			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
 		}
 	}
 
-	basicNew {| aSymbol, anEnvir |
-		pnEnvironment = anEnvir;		// move this line in the *new method? use 'instVarPut'
-		pnEnvironment.put( aSymbol, this );
-		name = aSymbol;
+	*basicNew {| aSymbol, anEnvir |
+		^super.new
+		.instVarPut( \pnEnvironment, anEnvir )
+		.instVarPut( \name, aSymbol );
 	}
 		
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+		pnEnvironment.put( name, this );
 		this.inputPlaces_( inputPlaces )
 		.outputPlaces_( outputPlaces )
 		.inhibitorPlaces_( inhibitorPlaces )
@@ -133,7 +137,7 @@ PNTransitionN {
 		^ aCollection.collect {| elem | 
 			if( elem.isKindOf( Symbol ) ){ // modify to pass tokens after name e.x [ \p0, 10, \p1, \p2]
 				place = pnEnvironment.at( elem );
-				if( place.isNil ){ place = PNPlaceN( elem, pnEnvironment: pnEnvironment ); };
+				if( place.isNil ){ place = PNPlaceN( elem, anEnvir: pnEnvironment ); };
 				place
 			}{
 				elem
@@ -195,10 +199,7 @@ PetriNetN {
 	}
 
 	prAddTransition {| aDict |
-		var dict;
-		dict = aDict;
-		dict.put( \pnEnvironment, pnEnvironment );
-		PNTransitionN.performWithEnvir( \new, dict );
+		PNTransitionN.basicNew( aDict.removeAt( \transition, pnEnvironment ), pnEnvironment ).performWithEnvir( \init, aDict ); // look this again
 	}
 
 	prAddPlaces {| aDict |
@@ -251,9 +252,9 @@ PetriNetN {
 		^ Post<< "The new marking is\n\t " << this.marking << "\n";
 	}
 
-	inputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inputPlaces }
-	outputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).outputPlaces }
-	inhibitorPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inhibitorPlaces }
+	inputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inputPlaces.collect {| p | p.name } }
+	outputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).outputPlaces.collect {| p | p.name } }
+	inhibitorPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inhibitorPlaces.collect {| p | p.name } }
 
 }
 
@@ -317,7 +318,7 @@ PNSamplePath {
 	}
 	//step 4:
 	generateNewMarking {
-		enabledTransitions.do {| aSymbol | petriNet.transitions.at( aSymbol ).fire( this ); }
+		enabledTransitions.do {| aSymbol | petriNet.transitions.at( aSymbol ).fire( petriNet ); }
 	}
 	//end of algorithm	
 }
@@ -326,11 +327,11 @@ PNPatternN : Pattern {
 	var petriNet, dictionary, length, marking, samplePath; // change the name of dictionary?
 
 	*new {| aPetriNet, aDictionary, length = inf, marking |
-		^ super.newCopyArgs( aPetriNet, aDictionary, length, marking ).init // replace copy method with something else?
+		^ super.newCopyArgs( aPetriNet, aDictionary, length, marking ).init 
 	}
 
 	init {
-		dictionary = dictionary.keysValuesChange {| key, val | val.asStream };
+		dictionary.keysValuesChange {| key, val | val.asStream };
 		if( marking.notNil ){ petriNet.setMarking( marking ) };
 	}
 
