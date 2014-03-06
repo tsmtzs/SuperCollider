@@ -8,15 +8,15 @@ PNPlaceN {
 		envir = anEnvir ?? { topEnvironment }; // maybe exclude topEnvironment?
 		place = envir.at( key );
 		if( place.isNil ){
-			place = super.newCopyArgs( anInteger ?? { 0 }, key, envir ).init;
+			place = super.newCopyArgs( anInteger ?? { 0 }, key ).init( envir );
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) }
 		};
 		^ place
 	}
 
-	init {
-		pnEnvironment.put( name, this );
+	init {| anEnvir |
+		anEnvir.put( name, this );
 	}
 
 	tokens_ { | anInteger |
@@ -54,18 +54,19 @@ PNPlaceN {
 	}
 }
 
+
+
 // look again instance method 'pnEnvironment'
 // discriminate between places and transitions?
 // if a place and a transition have the same name, one is ovewriten
 // OR
 // don't store pnEnvironment in each instance. Just pass it over so that an instance
 // can regist in the Environment
-
 PNTransitionN {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
 	var <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
-	var <>enabledFunction, <>pnEnvironment;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
+	var <>enabledFunction, pnEnvironment;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 
 	*initClass{
 		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
@@ -199,7 +200,9 @@ PetriNetN {
 	}
 
 	prAddTransition {| aDict |
-		PNTransitionN.basicNew( aDict.removeAt( \transition, pnEnvironment ), pnEnvironment ).performWithEnvir( \init, aDict ); // look this again
+		var name;
+		name = aDict.removeAt( \transition, pnEnvironment );
+		PNTransitionN.basicNew( name, pnEnvironment ).performWithEnvir( \init, aDict ); // look this again
 	}
 
 	prAddPlaces {| aDict |
