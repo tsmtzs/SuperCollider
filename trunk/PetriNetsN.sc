@@ -61,7 +61,7 @@ PNPlaceN {
 // if a place and a transition have the same name, one is ovewriten
 // OR
 // don't store pnEnvironment in each instance. Just pass it over so that an instance
-// can regist in the Environment
+// can register in the Environment
 PNTransitionN {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
 	var <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
@@ -102,11 +102,11 @@ PNTransitionN {
 		^super.new
 		.instVarPut( \pnEnvironment, anEnvir )
 		.instVarPut( \name, aSymbol );
+		pnEnvironment.put( name, this );
 	}
 		
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
-		pnEnvironment.put( name, this );
 		this.inputPlaces_( inputPlaces )
 		.outputPlaces_( outputPlaces )
 		.inhibitorPlaces_( inhibitorPlaces )
@@ -141,6 +141,7 @@ PNTransitionN {
 				if( place.isNil ){ place = PNPlaceN( elem, anEnvir: pnEnvironment ); };
 				place
 			}{
+				// check for other objects?
 				elem
 			}
 		}
@@ -201,7 +202,7 @@ PetriNetN {
 
 	prAddTransition {| aDict |
 		var name;
-		name = aDict.removeAt( \transition, pnEnvironment );
+		name = aDict.removeAt( \transition );
 		PNTransitionN.basicNew( name, pnEnvironment ).performWithEnvir( \init, aDict ); // look this again
 	}
 
@@ -212,12 +213,12 @@ PetriNetN {
 	}
 
 	prAddPlacesBasic {| anArray |
-		var place;
 		anArray.do {| aSymbol |
-			place = PNPlaceN( aSymbol, 0, pnEnvironment );
+			PNPlaceN( aSymbol, 0, pnEnvironment );
 		};
 	}
 
+	// what is this for???
 	prAddToDict {| aDict, aSymbol, anObject |
 		if( aDict.includesKey( aSymbol ).not ){ aDict.put( aSymbol, anObject ); }
 	}
