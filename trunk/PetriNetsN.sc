@@ -253,7 +253,6 @@ PetriNetN {
 				places.at( key ).tokens_( val )
 			}
 		};
-		^ Post<< "The new marking is\n\t " << this.marking << "\n";
 	}
 
 	inputPlacesOf {| aSymbol | ^ transitions.at( aSymbol ).inputPlaces.collect {| p | p.name } }
@@ -331,10 +330,10 @@ PNSamplePath {
 }
 
 PNPatternN : Pattern {
-	var petriNet, dictionary, length, marking, samplePath; // change the name of dictionary?
+	var petriNet, dictionary, marking, length, samplePath; // change the name of dictionary?
 
-	*new {| aPetriNet, aDictionary, length = inf, marking |
-		^ super.newCopyArgs( aPetriNet, aDictionary, length, marking )
+	*new {| aPetriNet, aDictionary, marking, length = inf |
+		^ super.newCopyArgs( aPetriNet, aDictionary, marking, length )
 	}
 
 	storeArgs { ^ [ petriNet, dictionary, length, marking ] }
