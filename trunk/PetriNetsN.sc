@@ -102,11 +102,11 @@ PNTransitionN {
 		^super.new
 		.instVarPut( \pnEnvironment, anEnvir )
 		.instVarPut( \name, aSymbol );
-		pnEnvironment.put( name, this );
 	}
 		
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+		pnEnvironment.put( name, this );
 		this.inputPlaces_( inputPlaces )
 		.outputPlaces_( outputPlaces )
 		.inhibitorPlaces_( inhibitorPlaces )
@@ -302,7 +302,10 @@ PNSamplePath {
 	computeInitEnabledTransitions {
 		enabledTransitions = Set[];
 		transitions.do {| aSymbol |
-			if( petriNet.transitions.at( aSymbol ).isEnabled ){ 
+			// if petriNet is a subclass of IdentityDictionary then use
+			// petriNet[ aSymbol ].isEnabled
+			// assuming that places and transitions don't have common names
+			if( petriNet.transitions.at( aSymbol ).isEnabled ){
 				enabledTransitions.add( aSymbol );
 			}
 		};
@@ -331,18 +334,16 @@ PNPatternN : Pattern {
 	var petriNet, dictionary, length, marking, samplePath; // change the name of dictionary?
 
 	*new {| aPetriNet, aDictionary, length = inf, marking |
-		^ super.newCopyArgs( aPetriNet, aDictionary, length, marking ).init 
-	}
-
-	init {
-		dictionary.keysValuesChange {| key, val | val.asStream };
-		if( marking.notNil ){ petriNet.setMarking( marking ) };
+		^ super.newCopyArgs( aPetriNet, aDictionary, length, marking )
 	}
 
 	storeArgs { ^ [ petriNet, dictionary, length, marking ] }
 
 	embedInStream {| inval |
 		var samplePath, transitions;
+
+		dictionary.keysValuesChange {| key, val | val.asStream };
+		if( marking.notNil ){ petriNet.setMarking( marking ) };
 
 		samplePath = PNSamplePath( petriNet );
 
