@@ -1,13 +1,13 @@
 // $LastChangedDate$
 // $Rev$
 PNPlaceN {
-	var <tokens, <>name; // don't store Environment in a variable?
+	var  <>name, <tokens; // don't store Environment in a variable?
 
-	*new {| key, anInteger, anEnvir |
+	*new {| key, anInteger |
 		var place;
 		place = currentEnvironment.at( key );
 		if( place.isNil ){
-			place = super.newCopyArgs( anInteger ?? { 0 }, key ).init;
+			place = super.newCopyArgs( key, anInteger ?? { 0 } ).init;
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) }
 		};
@@ -79,17 +79,17 @@ PNTransitionN {
 		};
 	}
 
-	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		var transition;
 		// look again this message - symbols - places
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
 			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-		transition = currentEnvironment.at( key );
+		transition = currentEnvironment.at( name );
 		if( transition.isNil ){
-			transition = this.basicNew( key )
+			transition = this.basicNew( name )
 			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
-			currentEnvironment.put( key, transition );
+			currentEnvironment.put( name, transition );
 		}{
 			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
 		}
@@ -189,17 +189,19 @@ PetriNetN : IdentityDictionary {
 
 	init {| dictionaries |
 		dictionaries.do {| aDict |
-			this.prAddPlaces( aDict )
-			.prAddTransition( aDict );
+			aDict.postln;					// debug
+			"One".postln;					// debug
+			// this.prAddPlaces( aDict )
+			// .prAddTransition( aDict );
 		};
 		places = this.select {| value, key | value.isKindOf( PNPlaceN ) }.as(Event);
-		transitions = this.select {| value, key | value.isKindOf( PNTransitionN ) }.as(Event)
+		// transitions = this.select {| value, key | value.isKindOf( PNTransitionN ) }.as(Event)
 	}
 
 	prAddTransition {| aDict |
 		var name;
 		name = aDict.removeAt( \transition );
-		aDict.put( \name, name )
+		aDict.put( \name, name );
 		PNTransitionN.performWithEnvir( \new, aDict ); // is there a better approach for this???
 	}
 
@@ -217,10 +219,10 @@ PetriNetN : IdentityDictionary {
 		}{
 			# aSymbol, tokens = anArray.copyRange( i, i + 1 );
 			if ( tokens.isKindOf( SimpleNumber ) ){
-				PNPlaceN( tokens, aSymbol );
+				PNPlaceN( aSymbol, tokens );
 				i = i + 2;
 			}{
-				PNPlaceN( 0, aSymbol );
+				PNPlaceN( aSymbol, 0 );
 				i = i + 1;
 			}
 		}
@@ -369,5 +371,17 @@ PNPatternN : Pattern {
 			.computeEnabledTransitions;
 			};
 		^inval
+	}
+}
+
+Lala {
+	*new {| ... dicts |
+		^super.new.init( dicts )
+	}
+
+	init {| dicts |
+		dicts.do {|aDict|
+			aDict.postln;
+		}
 	}
 }
