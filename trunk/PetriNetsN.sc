@@ -1,10 +1,21 @@
 // $LastChangedDate$
 // $Rev$
 PNPlaceN {
-	var <tokens; // don't store Environment in a variable?
+	var <tokens, <>name; // don't store Environment in a variable?
 
-	*new {|  anInteger |
-		^ super.newCopyArgs( anInteger ?? { 0 } )
+	*new {| key, anInteger, anEnvir |
+		var place;
+		place = currentEnvironment.at( key );
+		if( place.isNil ){
+			place = super.newCopyArgs( anInteger ?? { 0 }, key ).init;
+		}{
+			if( anInteger.notNil ){ place.tokens_( anInteger ) }
+		};
+		^ place
+	}
+
+	init {
+		currentEnvironment.put( name, this );
 	}
 
 	tokens_ { | anInteger |
@@ -30,6 +41,10 @@ PNPlaceN {
 
 	gui {| aWindow | }
 
+	printOn { arg stream;
+		stream << this.class.name << "( " << name <<" , " << tokens  << " )";
+	}
+
 // Modify method warning so that it can print or not the message?
 	warn {| anObject |
 		if( anObject.isKindOf( Integer ).not ){
@@ -37,8 +52,6 @@ PNPlaceN {
 		};
 	}
 }
-
-
 
 // look again instance method 'pnEnvironment'
 // discriminate between places and transitions?
@@ -48,7 +61,7 @@ PNPlaceN {
 // can register in the Environment
 PNTransitionN {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
-	var  inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
+	var  name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 
@@ -66,14 +79,27 @@ PNTransitionN {
 		};
 	}
 
-	*new { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, anEnvir |
+	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		var transition;
 		// look again this message - symbols - places
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
 			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-		^super.new.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+		transition = currentEnvironment.at( key );
+		if( transition.isNil ){
+			transition = this.basicNew( key )
+			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+			currentEnvironment.put( key, transition );
+		}{
+			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+		}
 	}
+
+	*basicNew {| aSymbol |
+		^super.new
+		.instVarPut( \name, aSymbol );
+	}
+		
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
@@ -173,7 +199,8 @@ PetriNetN : IdentityDictionary {
 	prAddTransition {| aDict |
 		var name;
 		name = aDict.removeAt( \transition );
-		this.put( PNTransitionN.new.performWithEnvir( \init, aDict ) );
+		aDict.put( \name, name )
+		PNTransitionN.performWithEnvir( \new, aDict ); // is there a better approach for this???
 	}
 
 	prAddPlaces {| aDict |
@@ -190,19 +217,19 @@ PetriNetN : IdentityDictionary {
 		}{
 			# aSymbol, tokens = anArray.copyRange( i, i + 1 );
 			if ( tokens.isKindOf( SimpleNumber ) ){
-				this.put( aSymbol, PNPlaceN( tokens ) );
+				PNPlaceN( tokens, aSymbol );
 				i = i + 2;
 			}{
-				this.put( aSymbol , PNPlaceN( 0 ) );
+				PNPlaceN( 0, aSymbol );
 				i = i + 1;
 			}
 		}
 	}
 
 	// what is this for???
-	prAddToDict {| aDict, aSymbol, anObject |
-		if( aDict.includesKey( aSymbol ).not ){ aDict.put( aSymbol, anObject ); }
-	}
+	// prAddToDict {| aDict, aSymbol, anObject |
+	// 	if( aDict.includesKey( aSymbol ).not ){ aDict.put( aSymbol, anObject ); }
+	// }
 
 	// places {| onlyNames = true |
 	// 	^ this.prGetObjects( PNPlaceN, onlyNames )
