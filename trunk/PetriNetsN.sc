@@ -273,11 +273,26 @@ PetriNetN : IdentityDictionary {
 	}
 
 	setMarking {| anIdentityDictionary |
+		// this supposes that places and transitions have distinct names
 		anIdentityDictionary.keysValuesDo {| key, val |
 			if( this.includesKey( key ) ){
 				this.at( key ).tokens_( val )
 			}
 		};
+	}
+
+	setSources {| anIdentityDictionary |
+		// this supposes that places and transitions have distinct names
+		anIdentityDictionary.keysValuesDo {| key, val |
+			if( this.includesKey( key ) ){
+				this.at( key ).source_( val )
+			}
+		};
+	}
+
+	setSource {| aSymbol, source |
+		// add some testing?
+		this.at( aSymbol ).source_( source );
 	}
 
 	inputPlacesOf {| aSymbol | ^ this.at( aSymbol ).inputPlaces.collect {| p | p.name } }
@@ -372,24 +387,28 @@ PNSamplePath {
 }
 
 PNPatternN : Pattern {
-	var petriNet, marking, length, samplePath;
+	var petriNet, marking, length, sources, samplePath;
 
-	*new {| aPetriNet, marking, length = inf |
-		^ super.newCopyArgs( aPetriNet, marking, length )
+	*new {| aPetriNet, marking, length = inf, sources |
+		^ super.newCopyArgs( aPetriNet, marking, length, sources )
 	}
 
-	storeArgs { ^ [ petriNet, length, marking ] }
+	storeArgs { ^ [ petriNet, length, marking, sources ] }
 
 	embedInStream {| inval |
-		var samplePath, transitions, streamDict;
+		var samplePath, transitions, streamDict, net;
 
-		streamDict = petriNet.transitions.collect {| trans | 
+		net = petriNet.copy;
+
+		if( sources.notNil ){ net.setSources( sources ) };
+
+		streamDict = net.transitions.collect {| trans | 
 			[ trans.name, trans.source.asStream ] 
 		}.flatten.as( Event );
 
-		if( marking.notNil ){ petriNet.setMarking( marking ) };
+		if( marking.notNil ){ net.setMarking( marking ) };
 
-		samplePath = PNSamplePath( petriNet );
+		samplePath = PNSamplePath( net );
 
 		samplePath.computeInitEnabledTransitions;
 
