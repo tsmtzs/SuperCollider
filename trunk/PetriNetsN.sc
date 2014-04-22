@@ -1,21 +1,32 @@
 // $LastChangedDate$
 // $Rev$
 PNPlaceN {
-	var  <>name, <tokens; // don't store Environment in a variable?
+	classvar <>all;
+	var  <>name, <tokens;
+
+	*initClass {
+		all = IdentityDictionary.new;
+	}
+
+	*at {| key |
+		^this.all.at( key )
+	}
 
 	*new {| key, anInteger |
 		var place;
-		place = currentEnvironment.at( key );
+		place = this.at( key );
 		if( place.isNil ){
-			place = super.newCopyArgs( key, anInteger ?? { 0 } ).init;
+			place = super.newCopyArgs( key, anInteger ?? { 0 } ).store;
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) }
 		};
 		^ place
 	}
 
-	init {
-		currentEnvironment.put( name, this );
+	*clearAll { this.all.clear }
+
+	store {
+		all.put( name, this );
 	}
 
 	tokens_ { | anInteger |
@@ -33,8 +44,9 @@ PNPlaceN {
 	}
 
 	removeTokens { | anInteger | 
-		this.warn( anInteger );
-		tokens = tokens - anInteger;
+		// this.warn( anInteger );
+		// tokens = tokens - anInteger;
+		this.addTokens( -1 * anInteger );
 	}
 
 	isEmpty { ^ tokens == 0 }
@@ -51,6 +63,9 @@ PNPlaceN {
 			("\nThe number" + anObject.asString + "is not an integer").warn 
 		};
 	}
+
+	isTransition { ^false }
+	isPlace { ^true }
 }
 
 // look again instance method 'pnEnvironment'
@@ -60,12 +75,14 @@ PNPlaceN {
 // don't store pnEnvironment in each instance. Just pass it over so that an instance
 // can register in the Environment
 PNTransitionN {
+	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
-	var  name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
+	var  <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 
 	*initClass{
+		all = IdentityDictionary.new;
 		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
 		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
@@ -79,28 +96,35 @@ PNTransitionN {
 		};
 	}
 
+	*at {| aSymbol |
+		^this.all.at( aSymbol );
+	}
+
 	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		var transition;
 		// look again this message - symbols - places
+		// should it assume that all places are given as PNPlace Objects?
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
 			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-		transition = currentEnvironment.at( name );
+		transition = this.at( name );
 		if( transition.isNil ){
 			transition = this.basicNew( name )
-			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
-			currentEnvironment.put( name, transition );
+			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
+			.store;
 		}{
 			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
 		}
+		^ transition
 	}
 
 	*basicNew {| aSymbol |
 		^super.new
-		.instVarPut( \name, aSymbol );
+		.name_( aSymbol );
 	}
-		
 
+	store { all.put( name, this ) }
+	
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
 		.outputPlaces_( outputPlaces )
@@ -128,18 +152,38 @@ PNTransitionN {
 
 	inhibitorPlaces {| aBoolean = false | ^ this.prGetPlaces( inhibitorPlaces, aBoolean ) }
 
+	// prCollectPlaceInstances {| aCollection |
+	// 	var place;
+	// 	^ aCollection.collect {| elem | 
+	// 		if( elem.isKindOf( Symbol ) ){ // modify to pass tokens after name e.x [ \p0, 10, \p1, \p2]
+	// 			place = PNPlaceN.at( elem );
+	// 			if( place.isNil ){ place = PNPlaceN( elem ); };
+	// 			place
+	// 		}{
+	// 			// check for other objects?
+	// 			elem
+	// 		}
+	// 	}
+	// }
+
 	prCollectPlaceInstances {| aCollection |
-		var place;
-		^ aCollection.collect {| elem | 
-			if( elem.isKindOf( Symbol ) ){ // modify to pass tokens after name e.x [ \p0, 10, \p1, \p2]
-				place = currentEnvironment.at( elem );
-				if( place.isNil ){ place = PNPlaceN( elem ); };
-				place
+		var i = 0, aSymbol, tokens, size;
+		var instList;
+		instList = List[];
+		size = aCollection.size;
+		while { 
+			i < size
+		}{
+			# aSymbol, tokens = aCollection.copyRange( i, i + 1 );
+			if ( tokens.isKindOf( SimpleNumber ) ){
+				instList.add( PNPlaceN( aSymbol, tokens ) );
+				i = i + 2;
 			}{
-				// check for other objects?
-				elem
+				instList.add( PNPlaceN( aSymbol ) );
+				i = i + 1;
 			}
 		}
+		^instList.array;
 	}
 
 	prGetPlaces {| aCollection, aBoolean = false |
@@ -168,9 +212,12 @@ PNTransitionN {
 
 	gui { | aWindow | }
 
-	// printOn { arg stream;
-	// 	stream << this.class.name << "( "<< this.name << " )";
-	// }
+	printOn { arg stream;
+		stream << this.class.name << "( "<< this.name << " )";
+	}
+
+	isTransition { ^true }
+	isPlace { ^false }
 }
 
 // PetriNetN as a subclass of IdentityDictionary. It stores every node 
@@ -189,77 +236,42 @@ PetriNetN : IdentityDictionary {
 
 	init {| dictionaries |
 		dictionaries.do {| aDict |
-			aDict.postln;					// debug
-			"One".postln;					// debug
-			// this.prAddPlaces( aDict )
-			// .prAddTransition( aDict );
+			this.prAddTransition( aDict );
 		};
-		places = this.select {| value, key | value.isKindOf( PNPlaceN ) }.as(Event);
-		// transitions = this.select {| value, key | value.isKindOf( PNTransitionN ) }.as(Event)
 	}
 
 	prAddTransition {| aDict |
-		var name;
+		var name, transition;
 		name = aDict.removeAt( \transition );
 		aDict.put( \name, name );
-		PNTransitionN.performWithEnvir( \new, aDict ); // is there a better approach for this???
+		transition = PNTransitionN.performWithEnvir( \new, aDict ); // is there a better approach for this???
+		this.put( name, transition );
+		transitions = transitions.add( transition ); // look this again
+		this.prAddPlaces( transition );
 	}
 
-	prAddPlaces {| aDict |
+	// NOT GOOD
+	prAddPlaces {| aPNTransitionN |
+		var transName;
 		[ \inputPlaces, \inhibitorPlaces, \outputPlaces ].do { | aSymbol |
-			this.prAddPlacesBasic( aDict.at( aSymbol ) );
-		}
-	}
-
-	prAddPlacesBasic {| anArray |
-		var i = 0, aSymbol, tokens, size;
-		size = anArray.size;
-		while { 
-			i < size
-		}{
-			# aSymbol, tokens = anArray.copyRange( i, i + 1 );
-			if ( tokens.isKindOf( SimpleNumber ) ){
-				PNPlaceN( aSymbol, tokens );
-				i = i + 2;
-			}{
-				PNPlaceN( aSymbol, 0 );
-				i = i + 1;
+			aPNTransitionN.perform( aSymbol ).do {| place |
+				transName = place.name;
+				// modify to take into account the number of tokens?
+				if( this.at( transName ).isNil ){
+					this.put( transName, place );
+					places = places.add( place ); // look this again
+				}
 			}
 		}
 	}
 
-	// what is this for???
-	// prAddToDict {| aDict, aSymbol, anObject |
-	// 	if( aDict.includesKey( aSymbol ).not ){ aDict.put( aSymbol, anObject ); }
-	// }
-
-	// places {| onlyNames = true |
-	// 	^ this.prGetObjects( PNPlaceN, onlyNames )
-	// }
-
-	// transitions {| onlyNames = true |
-	// 	^ this.prGetObjects( PNTransitionN, onlyNames )
-	// }	
-
-	// prGetObjects {|  class, onlyNames = true |
-	// 	var post;
-	// 	post = pnEnvironment.select {| value, key |
-	// 		value.isKindOf( class }
-	// 	};
-	// 	^ if( onlyNames ){
-	// 		post.keys
-	// 	}{
-	// 		post.as(Event)
-	// 	}
-	// }
-
 	marking {
-		^ this.places.collect {| place | place.tokens }
+		^ this.places.collect {| place | [ place.name, place.tokens ] }.flat.as( Event )
 	}
 
 	setMarking {| anIdentityDictionary |
 		anIdentityDictionary.keysValuesDo {| key, val |
-			if( places.includesKey( key ) ){
+			if( this.includesKey( key ) ){
 				this.at( key ).tokens_( val )
 			}
 		};
@@ -269,6 +281,19 @@ PetriNetN : IdentityDictionary {
 	outputPlacesOf {| aSymbol | ^ this.at( aSymbol ).outputPlaces.collect {| p | p.name } }
 	inhibitorPlacesOf {| aSymbol | ^ this.at( aSymbol ).inhibitorPlaces.collect {| p | p.name } }
 
+	// Overide this methods? What object should return?
+	// Needs work - returns error
+	// collect {| aFunction |
+	// 	^super.collect( aFunction )
+	// }
+
+	// select {| aFunction |
+	// 	^super.select( aFunction )
+	// }
+
+	// reject {| aFunction |
+	// 	^super.reject( aFunction )
+	// }
 }
 
 PNSamplePath {
@@ -282,7 +307,11 @@ PNSamplePath {
 	}
 
 	init {
-		transitions = petriNet.transitions.keys.asArray;
+		petriNet.keysValuesDo {| key, val |
+			if( val.isTransition ){ 
+				transitions = transitions.add( key );
+			};
+		};
 		b1 = IdentityDictionary[];
 		this.makeB1;
 	}
@@ -314,7 +343,7 @@ PNSamplePath {
 			// if petriNet is a subclass of IdentityDictionary then use
 			// petriNet[ aSymbol ].isEnabled
 			// assuming that places and transitions don't have common names
-			if( petriNet.transitions.at( aSymbol ).isEnabled ){
+			if( petriNet.at( aSymbol ).isEnabled ){
 				enabledTransitions.add( aSymbol );
 			}
 		};
@@ -327,14 +356,14 @@ PNSamplePath {
 		.values.flat.asSet;
 		enabledTransitions.clear;
 		candidateTrans.do {| aSymbol |
-			if( petriNet.transitions.at( aSymbol ).isEnabled ){ 
+			if( petriNet.at( aSymbol ).isEnabled ){ 
 				enabledTransitions.add( aSymbol );
 			}
 		};
 	}
 	//step 4:
 	generateNewMarking {
-		enabledTransitions.do {| aSymbol | petriNet.transitions.at( aSymbol ).fire( petriNet ); }
+		enabledTransitions.do {| aSymbol | petriNet.at( aSymbol ).fire( petriNet ); }
 	}
 	//end of algorithm	
 }
@@ -371,17 +400,5 @@ PNPatternN : Pattern {
 			.computeEnabledTransitions;
 			};
 		^inval
-	}
-}
-
-Lala {
-	*new {| ... dicts |
-		^super.new.init( dicts )
-	}
-
-	init {| dicts |
-		dicts.do {|aDict|
-			aDict.postln;
-		}
 	}
 }
