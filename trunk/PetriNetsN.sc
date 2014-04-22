@@ -80,6 +80,7 @@ PNTransitionN {
 	var  <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
+	var <>source;
 
 	*initClass{
 		all = IdentityDictionary.new;
@@ -100,7 +101,7 @@ PNTransitionN {
 		^this.all.at( aSymbol );
 	}
 
-	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
+	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source |
 		var transition;
 		// look again this message - symbols - places
 		// should it assume that all places are given as PNPlace Objects?
@@ -111,9 +112,11 @@ PNTransitionN {
 		if( transition.isNil ){
 			transition = this.basicNew( name )
 			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
+			.source_( source )
 			.store;
 		}{
-			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction );
+			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
+			.source_( source );
 		}
 		^ transition
 	}
@@ -369,18 +372,21 @@ PNSamplePath {
 }
 
 PNPatternN : Pattern {
-	var petriNet, dictionary, marking, length, samplePath; // change the name of dictionary?
+	var petriNet, marking, length, samplePath;
 
-	*new {| aPetriNet, aDictionary, marking, length = inf |
-		^ super.newCopyArgs( aPetriNet, aDictionary, marking, length )
+	*new {| aPetriNet, marking, length = inf |
+		^ super.newCopyArgs( aPetriNet, marking, length )
 	}
 
-	storeArgs { ^ [ petriNet, dictionary, length, marking ] }
+	storeArgs { ^ [ petriNet, length, marking ] }
 
 	embedInStream {| inval |
-		var samplePath, transitions;
+		var samplePath, transitions, streamDict;
 
-		dictionary.keysValuesChange {| key, val | val.asStream };
+		streamDict = petriNet.transitions.collect {| trans | 
+			[ trans.name, trans.source.asStream ] 
+		}.flatten.as( Event );
+
 		if( marking.notNil ){ petriNet.setMarking( marking ) };
 
 		samplePath = PNSamplePath( petriNet );
@@ -389,7 +395,7 @@ PNPatternN : Pattern {
 
 		length.value.do {
 			inval = samplePath.enabledTransitions.collect {| aSymbol |
-				dictionary.at( aSymbol ).next( inval ) // or use embedInStream?
+				streamDict.at( aSymbol ).next( inval ) // or use embedInStream?
 			}.asArray;
 
 			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
