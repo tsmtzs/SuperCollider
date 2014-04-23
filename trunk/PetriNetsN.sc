@@ -361,11 +361,13 @@ PetriNetN : IdentityDictionary {
 	// }
 }
 
+// abstract class - stores symbols, the names of the transitions.
+// ( store Transition instances instead? )
 PNSamplePath {
 	var >petriNet;
 	// add setter - getter methods?
-	var <transitions, <enabledTransitions;
-	var <b1;
+	var <transitions, <b1;
+	var <enabledTransitions;
 
 	*new {| aPetriNetN |
 		^ super.new.petriNet_( aPetriNetN ).init
@@ -398,10 +400,10 @@ PNSamplePath {
 			if( unionOfB1.notEmpty ){ b1.put( transition, unionOfB1.asArray ) };
 		};
 	}
+}
 
-	//the algorithm to generate a sample for the underlying process of the PetriNetN
-	// from Chapter 3 of "Stochastic Petri Nets: Modelling, Stability, Simulation" by Peter Haas
-	//step 1:
+SimpleSamplePath : PNSamplePath {
+	// step 1:
 	computeInitEnabledTransitions {
 		enabledTransitions = Set[];
 		transitions.do {| aSymbol |
@@ -412,7 +414,8 @@ PNSamplePath {
 				enabledTransitions.add( aSymbol );
 			}
 		};
-	}		
+	}
+	// step 2:
 	computeEnabledTransitions {
 		var candidateTrans;				// make this an instance var? is it significantly faster?
 		candidateTrans = b1.select {| value, key |
@@ -426,11 +429,98 @@ PNSamplePath {
 			}
 		};
 	}
-	//step 4:
+	//step 3:
 	generateNewMarking {
 		enabledTransitions.do {| aSymbol | petriNet.at( aSymbol ).fire( petriNet ); }
 	}
 	//end of algorithm	
+}
+
+TimedSamplePath : PNSamplePath {
+	var <oldTransitions, <newTransitions, <firingTransitions;
+	var <currentTime, <holdingTime;
+
+	//the algorithm to generate a sample for the underlying process of the SPetriNet
+	// from Chapter 3 of "Stochastic Petri Nets: Modelling, Stability, Simulation" by Peter Haas
+	// step 1:
+	computeInitEnabledTransitions {
+		var trans;
+		currentTime = 0;//timeOffset
+		enabledTransitions = Set[];
+		oldTransitions = Set[];
+		transitions.do {| aSymbol |
+			trans = petriNet[ aSymbol ];
+			if( trans.isEnabled ){ 
+				enabledTransitions.add( aSymbol );
+				trans.clockReading = trans.clock.value( petriNet );
+			}{
+				trans.clockReading = 0;
+			};
+		};
+		newTransitions = enabledTransitions; // .copy ???
+	}
+	//step 2:
+	computeFiringTransitions {
+		if( enabledTransitions.isEmpty ){ 
+			// maybe return nil so that the PNPattern stop?
+			^ Error("There are no enabled transitions in petri net"+this.name.asString).throw; 
+		};
+		holdingTime = enabledTransitions.collect{| aSymbol | 
+			petriNet[ aSymbol ].clockReading 
+		}.minItem;
+		firingTransitions = enabledTransitions.select {| aSymbol |
+			petriNet[ aSymbol ].clockReading == holdingTime;
+		};
+	}
+	//step 3:
+	nextMarkingChangeAt {
+		currentTime = currentTime + holdingTime;
+	}
+	//step 4:
+	generateNewMarking {
+		firingTransitions.do {| aSymbol | 
+			petriNet[ aSymbol ].fire( petriNet ); 
+		}
+	}
+	//step 5:
+	computeOldTransitions {
+		var trans;
+		oldTransitions.clear;
+		( enabledTransitions - firingTransitions ).do {| aSymbol |
+			trans = petriNet[ aSymbol ];
+			if( trans.isEnabled ){
+				oldTransitions.add( aSymbol );
+				trans.clockReading = trans.clockReading -  holdingTime;
+			}
+		}
+	}
+	//step 6:
+	computeNewTransitions {
+		var trans, candidateTrans;
+
+		candidateTrans = b1.select {| value, key |
+			enabledTransitions.includes( key )
+		}
+		.values.flat.asSet;
+
+		newTransitions.clear;
+
+		( candidateTrans - oldTransitions ).do {| aSymbol |
+			trans = petriNet[ aSymbol ];
+			if( trans.isEnabled ){
+				newTransitions.add( aSymbol );
+				trans.clockReading = trans.clock.value( petriNet );
+			};
+		};
+		enabledTransitions = oldTransitions.union( newTransitions );
+	}
+	//step 7:
+	zeroRemainingClocks {
+		( transitions.as(Set) - enabledTransitions ).do {| aSymbol |
+			petriNet[ aSymbol ].clockReading = 0;
+		}
+	}
+	//end of algorithm
 }
 
 PNPatternN : Pattern {
@@ -455,7 +545,7 @@ PNPatternN : Pattern {
 
 		if( marking.notNil ){ net.setMarking( marking ) };
 
-		samplePath = PNSamplePath( net );
+		samplePath = SimpleSamplePath( net );
 
 		samplePath.computeInitEnabledTransitions;
 
