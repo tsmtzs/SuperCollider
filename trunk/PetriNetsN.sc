@@ -437,7 +437,7 @@ SimpleSamplePath : PNSamplePath {
 }
 
 TimedSamplePath : PNSamplePath {
-	var <oldTransitions, <newTransitions, <firingTransitions;
+	var <oldTransitions, <newTransitions, <firingTransitions, <previousEnabledTransitions;
 	var <currentTime, <holdingTime;
 
 	//the algorithm to generate a sample for the underlying process of the SPetriNet
@@ -457,7 +457,7 @@ TimedSamplePath : PNSamplePath {
 				trans.clockReading = 0;
 			};
 		};
-		newTransitions = enabledTransitions; // .copy ???
+		newTransitions = enabledTransitions.copy;
 	}
 	//step 2:
 	computeFiringTransitions {
@@ -512,11 +512,12 @@ TimedSamplePath : PNSamplePath {
 				trans.clockReading = trans.clock.value( petriNet );
 			};
 		};
+		previousEnabledTransitions = EnabledTransitions.copy;
 		enabledTransitions = oldTransitions.union( newTransitions );
 	}
 	//step 7:
 	zeroRemainingClocks {
-		( transitions.as(Set) - enabledTransitions ).do {| aSymbol |
+		( previousEnabledTransitions - enabledTransitions ).do {| aSymbol |
 			petriNet[ aSymbol ].clockReading = 0;
 		}
 	}
@@ -562,5 +563,86 @@ PNPatternN : Pattern {
 			.computeEnabledTransitions;
 			};
 		^inval
+	}
+}
+
+PNEventPattern : Pattern {
+	var petriNet, marking, length, sources, samplePath;
+
+	*new {| aPetriNet, marking, length = inf, sources |
+		^ super.newCopyArgs( aPetriNet, marking, length, sources )
+	}
+
+	storeArgs { ^ [ petriNet, length, marking, sources ] }
+
+	embedInStream {| invevent |
+		var samplePath, transitions, streamDict, net, ev;
+		var aTrans, newTrans, cleanupTrans, cleanupEvents;
+
+		cleanupEvents = IdentityDictionary[];
+
+		net = petriNet.copy;
+
+		if( sources.notNil ){ net.setSources( sources ) };
+
+		streamDict = net.transitions.collect {| trans | 
+			[ trans.name, trans.source.asStream ] 
+		}.flatten.as( Event );
+
+		if( marking.notNil ){ net.setMarking( marking ) };
+
+		samplePath = TimedSamplePath( net );
+
+		samplePath.computeInitEnabledTransitions;
+
+		length.value.do {
+			// if( inevent.isNil ){ ^ nil.yield };
+			// if( inevent.isNil ){  ev = ( type: \rest ) };
+			samplePath.computeFiringTransitions;
+
+			// better approach for the following lines ?
+			newTrans = samplePath.newTransitions.copy;
+			aTrans = newTrans.pop;
+
+			newTrans.do {| aSymbol |
+				ev = streamDict.at( aSymbol ).next( inevent );
+				ev[ \delta ] = 0;
+				cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
+				inevent = ev.yield;
+			};
+
+			ev = streamDict.at( aTrans ).next( inevent );
+			ev[ \delta ] = samplePath.holdingTime;
+			inevent = ev.yield;
+			cleanupEvents.put( aTrans,  EventTypesWithCleanup.cleanupEvent( ev.put( \delta, 0 ) ) );			
+			// better approach for the previous lines ?
+
+			samplePath.generateNewMarking
+			.computeOldTransitions
+			.computeNewTransitions
+			.zeroRemainingClocks;
+
+			cleanupTrans = ( samplePath.previousEnabledTransitions - samplePath.enabledTransitions );
+
+			cleanupTrans.do {| aSymbol |
+				ev = cleanupEvents[ aSymbol ];
+				inevent = ev.yield;
+			}
+		};
+		^inevent
+	}
+}
+
++ EventTypesWithCleanup {
+	// almost a copy of the *cleanup method
+	*cleanupEvent { | ev, flag = true |
+		var type, notNode;
+		type = ev[\type];
+		notNode = notNodeType[type] ? true;
+		if (flag || notNode) {
+			^ (	parent: ev,
+				type: cleanupTypes[type]
+			);
+		}
 	}
 }
