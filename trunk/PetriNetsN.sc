@@ -221,6 +221,43 @@ PNTransitionN {
 
 	isTransition { ^true }
 	isPlace { ^false }
+	isTimed { ^false }
+
+	// asTimedPN {| clock |
+	// 	// maybe delete from all dictionary the instanse?
+	// 	clock = clock ?? { 1 };
+	// 	^ PNTimedTransitionN( name,	inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clock, source )
+	// }
+}
+
+PNTimedTransitionN : PNTransitionN {
+	classvar <clockFunctionDefault;
+	var <>clock, <>clockReading;
+
+	*initClass{
+		clockFunctionDefault = 1;
+	}
+
+	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clock, source |
+		^super.new( name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source )
+		.clock_( clock ?? { clockFunctionDefault } )
+	}
+
+	neutralize {						// remove this method?
+		super.neutralize;
+		this.clock_( clockFunctionDefault );
+	}
+
+	gui { | aWindow | }
+
+	isTimed { ^true }
+
+	// asSimplePN {| aSymbol |
+	// 	aSymbol ?? { 
+	// 		all.removeAt( name ); 
+	// 	};
+	// 	^ PNTransitionN( name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source )
+	// }
 }
 
 // PetriNetN as a subclass of IdentityDictionary. It stores every node 
