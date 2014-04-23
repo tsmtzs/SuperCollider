@@ -175,3 +175,63 @@ q.nextN( 20 )
 p.play
 
 // Remark: Works ONLY with value patterns
+
+//////////////////////////////////////////////////////////////////////
+// Tests for revision 29  of PetriNetsN.sc
+//////////////////////////////////////////////////////////////////////
+
+(
+a = PetriNetN(
+	(
+		\transition: \t1,
+		\inputPlaces: [\p1],
+		\outputPlaces: [\p2],
+		\inhibitorPlaces: [],
+		\source: 1
+	),
+	(
+		\transition: \t2,
+		\inputPlaces: [\p2],
+		\outputPlaces: [\p3,\p4],
+		\inhibitorPlaces: [],
+		// \updateOutputPlaces: {| outputPlaces |
+		// 	outputPlaces.choose.addOneToken;
+		// }
+		\source: 2
+	),
+	(
+		\transition: \t3,
+		\inputPlaces: [\p3],
+		\outputPlaces: [\p5],
+		\inhibitorPlaces: [],
+		\source: 3
+	),
+	(
+		\transition: \t4,
+		\inputPlaces: [\p4],
+		\outputPlaces: [\p6],
+		\inhibitorPlaces: [],
+		\source: 4
+	),
+	(
+		\transition: \t5,
+		\inputPlaces: [\p5],
+		\outputPlaces: [\p2],
+		\inhibitorPlaces: [],
+		// \updateOutputPlaces: ~updateFunction,
+		\source: 5
+	),
+	(
+		\transition: \t6,
+		\inputPlaces: [\p6],
+		\outputPlaces: [\p2],
+		\inhibitorPlaces: [],
+		// \clock: { 1.rrand( 4 ) },
+		// \updateOutputPlaces: ~updateFunction,
+		\source: 6
+	)
+)
+)
+
+a.type
+a.transitions
