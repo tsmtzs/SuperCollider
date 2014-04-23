@@ -264,7 +264,7 @@ PNTimedTransitionN : PNTransitionN {
 // as a key with the given name and sets its value to the corresponding object ( place - transition ).
 // Thus, places and transitions must have unique names.
 PetriNetN : IdentityDictionary {
-	var <places, <transitions;
+	var <places, <transitions, <type;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
 // \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
@@ -275,16 +275,26 @@ PetriNetN : IdentityDictionary {
 	}
 
 	init {| dictionaries |
+		var className;
+
+		// what if there are timed and simple transitions with the same name
+		// stored in PNTransition's all dictionary???
+		# className, type = if( ().putAll( *dictionaries ).includesKey( \clock ) ){
+			[ PNTimedTransitionN, \timed ];
+		}{
+			[ PNTransitionN, \simple ];
+		};
+	
 		dictionaries.do {| aDict |
-			this.prAddTransition( aDict );
+			this.prAddTransition( aDict, className );
 		};
 	}
 
-	prAddTransition {| aDict |
+	prAddTransition {| aDict, transitionClass |
 		var name, transition;
 		name = aDict.removeAt( \transition );
 		aDict.put( \name, name );
-		transition = PNTransitionN.performWithEnvir( \new, aDict ); // is there a better approach for this???
+		transition = transitionClass.performWithEnvir( \new, aDict ); // is there a better approach for this???
 		this.put( name, transition );
 		transitions = transitions.add( transition ); // look this again
 		this.prAddPlaces( transition );
@@ -292,13 +302,13 @@ PetriNetN : IdentityDictionary {
 
 	// NOT GOOD
 	prAddPlaces {| aPNTransitionN |
-		var transName;
+		var placeName;
 		[ \inputPlaces, \inhibitorPlaces, \outputPlaces ].do { | aSymbol |
 			aPNTransitionN.perform( aSymbol ).do {| place |
-				transName = place.name;
+				placeName = place.name;
 				// modify to take into account the number of tokens?
-				if( this.at( transName ).isNil ){
-					this.put( transName, place );
+				if( this.at( placeName ).isNil ){
+					this.put( placeName, place );
 					places = places.add( place ); // look this again
 				}
 			}
