@@ -235,3 +235,69 @@ a = PetriNetN(
 
 a.type
 a.transitions
+
+//////////////////////////////////////////////////////////////////////
+// Tests for revisions 32 of PetriNetsN.sc
+//////////////////////////////////////////////////////////////////////
+
+(
+~series = {| n = 3 |
+	var aSymbol;
+	n.collect {| i |
+		aSymbol = i.asSymbol;
+		(
+			transition: ( \t ++ aSymbol ).asSymbol,
+			inputPlaces: [ ( \p ++ aSymbol ).asSymbol, if( i == 0 ){ 1 }{ 0 } ],
+			outputPlaces: [ ( \p ++ ( i + 1).mod( n ).asSymbol ).asSymbol ],
+			inhibitorPlaces: [],
+			source: ( type: \on, freq: i + 1 * 300, amp: 0.3 ),
+			clock: 1
+		)
+	}
+}
+)
+
+[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+
+(
+a = PetriNetN( *(~series.( 3 )) );
+)
+
+a.transitions
+a.places
+a.marking
+a.type
+
+(
+~objects = (
+	t0: ( type: \on, freq: 500, amp: 0.5 ),
+	t1: ( type: \on, freq: 200, amp: 0.5 ),
+	// t1: ( type: \rest ),				// ok
+	// t1: nil,							// ok
+	t2: ( type: \on, freq: 300, amp: 0.2 )
+)
+)
+
+(
+~marking = 	a.marking.keysValuesChange({| key, value |
+		value = if( key == 'p0' ){ 1 }{ 0 };
+	})
+)
+
+~marking = ( p0: 1, p1: 0, p2: 1 )
+
+p = PNEventPattern( a )
+p = PNEventPattern( a, ~marking, inf, ~objects )
+q = p.asStream
+q.next( () )
+
+q = p.play
+q.stop
+
+a.push
+// the following doesn't work due to the initialization of
+// streamDict var in embedInStream method of PNEventPattern
+~t0.source = ( type: \on, freq: 899, amp: 0.5 )
+~p0.tokens = 1
+a.marking
+a.pop
