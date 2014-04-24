@@ -400,7 +400,7 @@ PNSamplePath {
 						unionOfB1.add( trans );
 					};
 			};
-			if( unionOfB1.notEmpty ){ b1.put( transition, unionOfB1.asArray ) };
+			if( unionOfB1.notEmpty ){ b1.put( transition, unionOfB1.add( transition ).asArray ) };
 		};
 	}
 }
