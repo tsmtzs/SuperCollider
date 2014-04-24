@@ -101,6 +101,8 @@ PNTransitionN {
 		^this.all.at( aSymbol );
 	}
 
+	*clearAll { this.all.clear }
+
 	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source |
 		var transition;
 		// look again this message - symbols - places
@@ -125,6 +127,7 @@ PNTransitionN {
 		^super.new
 		.name_( aSymbol );
 	}
+
 
 	store { all.put( name, this ) }
 	
@@ -263,7 +266,7 @@ PNTimedTransitionN : PNTransitionN {
 // PetriNetN as a subclass of IdentityDictionary. It stores every node 
 // as a key with the given name and sets its value to the corresponding object ( place - transition ).
 // Thus, places and transitions must have unique names.
-PetriNetN : IdentityDictionary {
+PetriNetN : Environment {
 	var <places, <transitions, <type;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
@@ -502,7 +505,6 @@ TimedSamplePath : PNSamplePath {
 			enabledTransitions.includes( key )
 		}
 		.values.flat.asSet;
-
 		newTransitions.clear;
 
 		( candidateTrans - oldTransitions ).do {| aSymbol |
@@ -512,7 +514,7 @@ TimedSamplePath : PNSamplePath {
 				trans.clockReading = trans.clock.value( petriNet );
 			};
 		};
-		previousEnabledTransitions = EnabledTransitions.copy;
+		previousEnabledTransitions = enabledTransitions.copy;
 		enabledTransitions = oldTransitions.union( newTransitions );
 	}
 	//step 7:
@@ -575,7 +577,7 @@ PNEventPattern : Pattern {
 
 	storeArgs { ^ [ petriNet, length, marking, sources ] }
 
-	embedInStream {| invevent |
+	embedInStream {| inevent |
 		var samplePath, transitions, streamDict, net, ev;
 		var aTrans, newTrans, cleanupTrans, cleanupEvents;
 
@@ -622,9 +624,7 @@ PNEventPattern : Pattern {
 			.computeNewTransitions
 			.zeroRemainingClocks;
 
-			cleanupTrans = ( samplePath.previousEnabledTransitions - samplePath.enabledTransitions );
-
-			cleanupTrans.do {| aSymbol |
+			samplePath.firingTransitions.do {| aSymbol |
 				ev = cleanupEvents[ aSymbol ];
 				inevent = ev.yield;
 			}
