@@ -587,9 +587,10 @@ PNEventPattern : Pattern {
 
 		if( sources.notNil ){ net.setSources( sources ) };
 
-		streamDict = net.transitions.collect {| trans | 
-			[ trans.name, trans.source.asStream ] 
-		}.flatten.as( Event );
+		// to ne used commenting the oneEventAssumption lines
+		// streamDict = net.transitions.collect {| trans | 
+		// 	[ trans.name, trans.source.asStream ] 
+		// }.flatten.as( Event );
 
 		if( marking.notNil ){ net.setMarking( marking ) };
 
@@ -607,13 +608,19 @@ PNEventPattern : Pattern {
 			aTrans = newTrans.pop;
 
 			newTrans.do {| aSymbol |
-				ev = streamDict.at( aSymbol ).next( inevent );
+				// If the source var of each transition stores only Events
+				// and only one at a time then you have real time access to source
+				ev = petriNet[ aSymbol ].source.next( inevent ); // oneEventAssuption
+				// ev = streamDict.at( aSymbol ).next( inevent );
+
 				ev[ \delta ] = 0;
 				cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
 				inevent = ev.yield;
 			};
 
-			ev = streamDict.at( aTrans ).next( inevent );
+			ev = petriNet[ aTrans ].source.next( inevent ); // oneEventAssuption
+			// ev = streamDict.at( aTrans ).next( inevent );
+
 			ev[ \delta ] = samplePath.holdingTime;
 			inevent = ev.yield;
 			cleanupEvents.put( aTrans,  EventTypesWithCleanup.cleanupEvent( ev.put( \delta, 0 ) ) );			
