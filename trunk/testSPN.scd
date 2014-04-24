@@ -303,3 +303,5 @@ a.push
 ~p0.addOneToken;						// ok
 a.marking
 a.pop
+
+~score = p.asScore( 10 );				// ok
