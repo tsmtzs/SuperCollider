@@ -613,7 +613,7 @@ PNEventPattern : Pattern {
 	storeArgs { ^ [ petriNet, length, marking, sources ] }
 
 	play {| clock, protoEvent, quant |
-		^ PNEventStreamPlayer( this.asStream, protoEvent ).play( clock, false, quant );
+		^ PNEventStreamPlayer( this.asStream, protoEvent ).play( clock, true, quant );
 	}
 
 	embedInStream {| inevent |
@@ -722,6 +722,7 @@ PNEventStreamPlayer : EventStreamPlayer {
 	}
 
 	stop {
+		cleanup.terminate;
 		nextBeat = nil;
 		isWaiting = false;
 		stream = outEvent[ \endStream ];
@@ -745,7 +746,7 @@ PNEventStreamPlayer : EventStreamPlayer {
 }
 
 + ScoreStreamPlayer {
-	// cheange this name
+	// change this name
 	makeScoreWithEnding { | stream, duration = 1, event, timeOffset = 0, releaseTime = 1|
 		var ev, startTime, proto;
 		proto = (
