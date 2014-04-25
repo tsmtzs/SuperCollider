@@ -237,7 +237,7 @@ a.type
 a.transitions
 
 //////////////////////////////////////////////////////////////////////
-// Tests for revisions 39 of PetriNetsN.sc
+// Tests for revisions 41 of PetriNetsN.sc
 //////////////////////////////////////////////////////////////////////
 
 (
@@ -305,3 +305,4 @@ a.marking
 a.pop
 
 ~score = p.asScore( 10 );				// ok
+~score.play								// ok - notes end when score finishes
