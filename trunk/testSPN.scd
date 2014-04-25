@@ -237,7 +237,7 @@ a.type
 a.transitions
 
 //////////////////////////////////////////////////////////////////////
-// Tests for revisions 32 of PetriNetsN.sc
+// Tests for revisions 39 of PetriNetsN.sc
 //////////////////////////////////////////////////////////////////////
 
 (
@@ -297,7 +297,7 @@ q.stop
 a.push
 // the following doesn't work due to the initialization of
 // streamDict var in embedInStream method of PNEventPattern
-~t0.source = ( type: \on, freq: 899, amp: 0.5 )
+~t0.source = ( type: \on, freq: 219, amp: 0.2 ) // ok if use 
 ~t0.clock = 0.2;							// ok
 ~p0.tokens = 1;							// ok
 ~p0.addOneToken;						// ok
