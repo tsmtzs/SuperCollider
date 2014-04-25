@@ -237,7 +237,7 @@ a.type
 a.transitions
 
 //////////////////////////////////////////////////////////////////////
-// Tests for revisions 41 of PetriNetsN.sc
+// Tests for revisions 43 of PetriNetsN.sc
 //////////////////////////////////////////////////////////////////////
 
 (
@@ -267,6 +267,12 @@ a.transitions
 a.places
 a.marking
 a.type
+a.sources
+a.sourceAt(\t1)
+a.pattern = nil
+a.pattern.play
+a.play
+a.stop
 
 (
 ~objects = (
@@ -287,7 +293,7 @@ a.type
 ~marking = ( p0: 1, p1: 0, p2: 1 )
 
 p = PNEventPattern( a )
-p = PNEventPattern( a, ~marking, inf, ~objects )
+p = PNEventPattern( a, a.marking, inf, a.sources )
 q = p.asStream
 q.next( () )
 
