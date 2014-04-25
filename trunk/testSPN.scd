@@ -296,7 +296,8 @@ p = PNEventPattern( a )
 p = PNEventPattern( a, a.marking, inf, a.sources )
 q = p.asStream
 q.next( () )
-
+q.reset
+// reset doesn't work. Why?
 q = p.play
 q.stop
 
