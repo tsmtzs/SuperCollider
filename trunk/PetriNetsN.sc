@@ -268,6 +268,7 @@ PNTimedTransitionN : PNTransitionN {
 // Thus, places and transitions must have unique names.
 PetriNetN : Environment {
 	var <places, <transitions, <type;
+	var >pattern, player;
 
 // Each argument corresponds to one transition and is an IdentityDictionary with keys:
 // \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
@@ -331,6 +332,18 @@ PetriNetN : Environment {
 		};
 	}
 
+	sources {
+		^Event.newFrom( 
+			this.transitions.collect {| val | 
+				[ val.name, val.source ] 
+			}.flat 
+		)
+	}
+
+	sourceAt {| aSymbol |
+		^ this[ aSymbol ].source;
+	}
+
 	setSources {| anIdentityDictionary |
 		// this supposes that places and transitions have distinct names
 		anIdentityDictionary.keysValuesDo {| key, val |
@@ -362,6 +375,28 @@ PetriNetN : Environment {
 	// reject {| aFunction |
 	// 	^super.reject( aFunction )
 	// }
+
+	pattern {
+		if( pattern.isNil ){
+			^ ( simple: PNPatternN, timed: PNEventPattern )
+			.at( type )
+			.new( this, this.marking, inf, this.sources )
+		}{
+			^ pattern
+		}
+	}
+
+	play {| clock, protoEvent, quant |
+		var pat;
+		pat = pattern ?? { this.pattern };
+		// or should return PetriNetN?
+		^ player = PNEventStreamPlayer( pat.asStream, protoEvent )
+		.play( clock, false, quant );
+	}
+
+	stop {
+		player.stop
+	}
 }
 
 // abstract class - stores symbols, the names of the transitions.
@@ -745,8 +780,8 @@ PNEventStreamPlayer : EventStreamPlayer {
 			stream = ev[ \endStream ];
 			// can this be written in a better way?
 			// Most of the following duplicates the previous lines
+			thisThread.beats = beats;
 			while {
-				thisThread.beats = beats;
 				ev = stream.next( event.copy );
 				ev.notNil
 			}{
