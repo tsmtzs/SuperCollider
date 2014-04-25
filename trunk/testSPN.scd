@@ -298,6 +298,7 @@ q = p.asStream
 q.next( () )
 q.reset
 // reset doesn't work. Why?
+// Ans: Because the marking has changed
 q = p.play
 q.stop
 
