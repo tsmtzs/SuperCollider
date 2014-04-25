@@ -263,7 +263,7 @@ PNTimedTransitionN : PNTransitionN {
 	// }
 }
 
-// PetriNetN as a subclass of IdentityDictionary. It stores every node 
+// PetriNetN as a subclass of Environment. It stores every node 
 // as a key with the given name and sets its value to the corresponding object ( place - transition ).
 // Thus, places and transitions must have unique names.
 PetriNetN : Environment {
@@ -577,9 +577,13 @@ PNEventPattern : Pattern {
 
 	storeArgs { ^ [ petriNet, length, marking, sources ] }
 
+	play {| clock, protoEvent, quant |
+		^ PNEventStreamPlayer( this.asStream, protoEvent ).play( clock, false, quant );
+	}
+
 	embedInStream {| inevent |
 		var samplePath, transitions, streamDict, net, ev;
-		var aTrans, newTrans, cleanupTrans, cleanupEvents;
+		var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType;
 
 		cleanupEvents = IdentityDictionary[];
 
@@ -587,7 +591,7 @@ PNEventPattern : Pattern {
 
 		if( sources.notNil ){ net.setSources( sources ) };
 
-		// to ne used commenting the oneEventAssumption lines
+		// to be used commenting the oneEventAssumption lines
 		// streamDict = net.transitions.collect {| trans | 
 		// 	[ trans.name, trans.source.asStream ] 
 		// }.flatten.as( Event );
@@ -614,16 +618,19 @@ PNEventPattern : Pattern {
 				// ev = streamDict.at( aSymbol ).next( inevent );
 
 				ev[ \delta ] = 0;
+
 				cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
+				this.prAddEndStream( ev, cleanupEvents );
 				inevent = ev.yield;
 			};
 
 			ev = petriNet[ aTrans ].source.next( inevent ); // oneEventAssuption
 			// ev = streamDict.at( aTrans ).next( inevent );
 
+			cleanupEvents.put( aTrans, EventTypesWithCleanup.cleanupEvent( ev )  );
+			this.prAddEndStream( ev, cleanupEvents );
 			ev[ \delta ] = samplePath.holdingTime;
 			inevent = ev.yield;
-			cleanupEvents.put( aTrans,  EventTypesWithCleanup.cleanupEvent( ev.put( \delta, 0 ) ) );			
 			// better approach for the previous lines ?
 
 			samplePath.generateNewMarking
@@ -632,14 +639,56 @@ PNEventPattern : Pattern {
 			.zeroRemainingClocks;
 
 			samplePath.firingTransitions.do {| aSymbol |
-				ev = cleanupEvents[ aSymbol ];
+				ev = cleanupEvents.at( aSymbol ).put( \delta, 0 );
+				this.prAddEndStream( ev, cleanupEvents );
 				inevent = ev.yield;
-			}
+			};
+
 		};
 		^inevent
 	}
+
+	prAddEndStream {| event, aDict |
+		event.put(
+			\endStream,
+			r {| inev |
+				aDict.do {| ev |
+					inev = ev.next( inev ).yield;
+				};
+				nil;
+			}
+		)
+	}		
 }
 
+PNEventStreamPlayer : EventStreamPlayer {
+	var outEvent;
+
+	prNext { arg inTime;
+		var nextTime;
+		outEvent = stream.next(event.copy);
+		if (outEvent.isNil) {
+			streamHasEnded = stream.notNil;
+			cleanup.clear;
+			this.removedFromScheduler;
+			^nil
+		}{
+			nextTime = outEvent.playAndDelta(cleanup, muteCount > 0);
+			if (nextTime.isNil) { this.removedFromScheduler; ^nil };
+			nextBeat = inTime + nextTime;	// inval is current logical beat
+			^nextTime
+		};
+	}
+
+	stop {
+		nextBeat = nil;
+		isWaiting = false;
+		stream = outEvent[ \endStream ];
+	}
+}
+
+// for some reason, all class extensions should
+// be at the end of file?
 + EventTypesWithCleanup {
 	// almost a copy of the *cleanup method
 	*cleanupEvent { | ev, flag = true |
