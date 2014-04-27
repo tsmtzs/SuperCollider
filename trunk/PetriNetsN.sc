@@ -210,7 +210,7 @@ PNTransitionN {
 		^enabledFunction.( inputPlaces, inhibitorPlaces )
 	}
 
-	neutralize {						// remove this method?
+	neutralize {					// remove this method?
 		#inputPlaces, inhibitorPlaces, outputPlaces  = nil ! 3;
 		updateInputPlaces = updateInputPlacesDefault;
 		updateOutputPlaces = updateOutputPlacesDefault;
@@ -644,6 +644,7 @@ PNEventPattern : Pattern {
 
 			// better approach for the following lines ?
 			newTrans = samplePath.newTransitions.copy;
+			newTrans.debug("newtrans");
 			aTrans = newTrans.pop;
 
 			newTrans.do {| aSymbol |
@@ -662,9 +663,9 @@ PNEventPattern : Pattern {
 			ev = petriNet[ aTrans ].source.next( inevent ); // oneEventAssuption
 			// ev = streamDict.at( aTrans ).next( inevent );
 
+			ev[ \delta ] = samplePath.holdingTime;
 			cleanupEvents.put( aTrans, EventTypesWithCleanup.cleanupEvent( ev )  );
 			this.prAddEndStream( ev, cleanupEvents );
-			ev[ \delta ] = samplePath.holdingTime;
 			inevent = ev.yield;
 			// better approach for the previous lines ?
 
@@ -672,7 +673,7 @@ PNEventPattern : Pattern {
 			.computeOldTransitions
 			.computeNewTransitions
 			.zeroRemainingClocks;
-
+			samplePath.firingTransitions.debug("firng trans");
 			samplePath.firingTransitions.do {| aSymbol |
 				ev = cleanupEvents.at( aSymbol ).put( \delta, 0 );
 				this.prAddEndStream( ev, cleanupEvents );
@@ -708,6 +709,7 @@ PNEventStreamPlayer : EventStreamPlayer {
 	prNext { arg inTime;
 		var nextTime;
 		outEvent = stream.next(event.copy);
+
 		if (outEvent.isNil) {
 			streamHasEnded = stream.notNil;
 			cleanup.clear;
@@ -726,6 +728,68 @@ PNEventStreamPlayer : EventStreamPlayer {
 		nextBeat = nil;
 		isWaiting = false;
 		stream = outEvent[ \endStream ];
+	}
+}
+
+// A class for debuging purposes
+PNPostState {
+	var >net, samplePath, <routine;
+
+	*new {| petriNet |
+		if( petriNet.type != \timed ){
+			"The argument must be a timed petri net".throw;
+		};
+		^ super.newCopyArgs( petriNet ).init;
+	}
+
+	init { 
+		samplePath = TimedSamplePath( net ) ;
+		routine = this.prRoutine;
+	}
+
+	prRoutine {
+		^ Routine {
+			samplePath.computeInitEnabledTransitions;
+			loop {
+				samplePath.computeFiringTransitions
+				.nextMarkingChangeAt;
+
+				this.currentStateAsString.yield;
+
+				// nil.yield;
+
+				samplePath.generateNewMarking
+				.computeOldTransitions
+				.computeNewTransitions
+				.zeroRemainingClocks
+			}
+		}
+	}
+
+	currentStateAsString {
+		var clockReadings, array, str;
+
+		clockReadings = net.transitions.collect {| trans |
+			[ trans.name, trans.clockReading ]
+		}.flatten.as(Event);
+
+		array = [
+			currentTime: samplePath.currentTime,
+			holdingTime: samplePath.holdingTime,
+			clockReadings: clockReadings,
+			marking: net.marking,
+			newTransitions: samplePath.newTransitions.asArray,
+			firingTransitions: samplePath.firingTransitions.asArray,
+			oldTransitions: samplePath.oldTransitions.asArray,
+			enabledTransitions: samplePath.enabledTransitions.asArray
+		];
+
+		str = "** A marking change occured.\n";
+		array.keysValuesDo {| key, val |
+			// Post << Char.tab << key << ": " << val << Char.nl;
+			str = str + Char.tab + key + ": " + val.asString + Char.nl;
+		};
+		^ str
 	}
 }
 
