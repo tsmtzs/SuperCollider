@@ -507,7 +507,8 @@ TimedSamplePath : PNSamplePath {
 			petriNet[ aSymbol ].clockReading 
 		}.minItem;
 		firingTransitions = enabledTransitions.select {| aSymbol |
-			petriNet[ aSymbol ].clockReading == holdingTime;
+			// petriNet[ aSymbol ].clockReading == holdingTime;
+			petriNet[ aSymbol ].clockReading.equalWithPrecision( holdingTime, 0.00000001 ); // ????
 		};
 	}
 	//step 3:
@@ -573,7 +574,7 @@ PNPatternN : Pattern {
 	embedInStream {| inval |
 		var samplePath, transitions, streamDict, net;
 
-		net = petriNet.copy;
+		net = petriNet;					// copy
 
 		if( sources.notNil ){ net.setSources( sources ) };
 
@@ -616,20 +617,70 @@ PNEventPattern : Pattern {
 		^ PNEventStreamPlayer( this.asStream, protoEvent ).play( clock, true, quant );
 	}
 
+	// for debuging 
+	// embedInStream {| inevent |
+	// 	var samplePath, transitions, streamDict, net, ev;
+	// 	var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType;
+	// 	var clockReadings, array, str;
+
+	// 	cleanupEvents = IdentityDictionary[];
+
+	// 	net = petriNet;					// copy??
+
+	// 	if( sources.notNil ){ net.setSources( sources ) };
+	// 	if( marking.notNil ){ net.setMarking( marking ) };
+
+	// 	samplePath = TimedSamplePath( net );
+
+	// 	samplePath.computeInitEnabledTransitions;
+
+	// 	length.value.do {
+	// 		samplePath.computeFiringTransitions;
+
+	// 		newTrans = samplePath.newTransitions.copy;
+	// 		////////////////////////////////////////
+	// 		clockReadings = petriNet.transitions.collect {| trans |
+	// 			[ trans.name, trans.clockReading ]
+	// 		}.flatten.as(Event);
+
+	// 		array = [
+	// 			currentTime: samplePath.currentTime,
+	// 			holdingTime: samplePath.holdingTime,
+	// 			clockReadings: clockReadings,
+	// 			marking: net.marking,
+	// 			newTransitions: samplePath.newTransitions.asArray,
+	// 			firingTransitions: samplePath.firingTransitions.asArray,
+	// 			oldTransitions: samplePath.oldTransitions.asArray,
+	// 			enabledTransitions: samplePath.enabledTransitions.asArray
+	// 		];
+
+	// 		str = "** A marking change occured.\n";
+	// 		array.keysValuesDo {| key, val |
+	// 			// Post << Char.tab << key << ": " << val << Char.nl;
+	// 			str = str + Char.tab + key + ": " + val.asString + Char.nl;
+	// 		};
+	// 		str.postln;
+	// 		////////////////////////////////////////
+	// 		0.5.wait;
+	// 		samplePath.generateNewMarking
+	// 		.computeOldTransitions
+	// 		.computeNewTransitions
+	// 		.zeroRemainingClocks;
+
+	// 	};
+	// 	^inevent
+	// }
+
 	embedInStream {| inevent |
 		var samplePath, transitions, streamDict, net, ev;
 		var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType;
+		var size;
 
 		cleanupEvents = IdentityDictionary[];
 
-		net = petriNet.copy;
+		net = petriNet;					// copy??
 
 		if( sources.notNil ){ net.setSources( sources ) };
-
-		// to be used commenting the oneEventAssumption lines
-		// streamDict = net.transitions.collect {| trans | 
-		// 	[ trans.name, trans.source.asStream ] 
-		// }.flatten.as( Event );
 
 		if( marking.notNil ){ net.setMarking( marking ) };
 
@@ -642,32 +693,30 @@ PNEventPattern : Pattern {
 			// if( inevent.isNil ){  ev = ( type: \rest ) };
 			samplePath.computeFiringTransitions;
 
-			// better approach for the following lines ?
-			newTrans = samplePath.newTransitions.copy;
-			newTrans.debug("newtrans");
-			aTrans = newTrans.pop;
+			newTrans = samplePath.newTransitions;
 
-			newTrans.do {| aSymbol |
-				// If the source var of each transition stores only Events
-				// and only one at a time then you have real time access to source
-				ev = petriNet[ aSymbol ].source.next( inevent ); // oneEventAssuption
-				// ev = streamDict.at( aSymbol ).next( inevent );
+			if( newTrans.notEmpty ){
+				size = newTrans.size;
 
-				ev[ \delta ] = 0;
+				newTrans.debug("newtrans");
 
-				cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
-				this.prAddEndStream( ev, cleanupEvents );
-				inevent = ev.yield;
+				newTrans.do {| aSymbol, i |
+					// If the source var of each transition stores only Events
+					// and only one at a time then you have real time access to source
+					ev = petriNet[ aSymbol ].source.next( inevent ); // oneEventAssuption
+					// ev = streamDict.at( aSymbol ).next( inevent );
+
+					ev[ \delta ] = if( i == size - 1 ){ 
+						0 
+					}{ 
+						samplePath.holdingTime 
+					};
+
+					cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
+					this.prAddEndStream( ev, cleanupEvents );
+					inevent = ev.yield;
+				};
 			};
-
-			ev = petriNet[ aTrans ].source.next( inevent ); // oneEventAssuption
-			// ev = streamDict.at( aTrans ).next( inevent );
-
-			ev[ \delta ] = samplePath.holdingTime;
-			cleanupEvents.put( aTrans, EventTypesWithCleanup.cleanupEvent( ev )  );
-			this.prAddEndStream( ev, cleanupEvents );
-			inevent = ev.yield;
-			// better approach for the previous lines ?
 
 			samplePath.generateNewMarking
 			.computeOldTransitions
@@ -731,7 +780,7 @@ PNEventStreamPlayer : EventStreamPlayer {
 	}
 }
 
-// A class for debuging purposes
+// A class for debuging
 PNPostState {
 	var >net, samplePath, <routine;
 
