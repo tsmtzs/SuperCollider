@@ -698,18 +698,16 @@ PNEventPattern : Pattern {
 			if( newTrans.notEmpty ){
 				size = newTrans.size;
 
-				newTrans.debug("newtrans");
-
 				newTrans.do {| aSymbol, i |
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
 					ev = petriNet[ aSymbol ].source.next( inevent ); // oneEventAssuption
 					// ev = streamDict.at( aSymbol ).next( inevent );
 
-					ev[ \delta ] = if( i == size - 1 ){ 
-						0 
+					ev[ \delta ] = if( i == ( size - 1 ) ){ 
+						samplePath.holdingTime  
 					}{ 
-						samplePath.holdingTime 
+						0
 					};
 
 					cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
@@ -722,7 +720,7 @@ PNEventPattern : Pattern {
 			.computeOldTransitions
 			.computeNewTransitions
 			.zeroRemainingClocks;
-			samplePath.firingTransitions.debug("firng trans");
+
 			samplePath.firingTransitions.do {| aSymbol |
 				ev = cleanupEvents.at( aSymbol ).put( \delta, 0 );
 				this.prAddEndStream( ev, cleanupEvents );
