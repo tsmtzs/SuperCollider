@@ -314,3 +314,149 @@ a.pop
 
 ~score = p.asScore( 10 );				// ok
 ~score.play								// ok - notes end when score finishes
+
+//////////////////////////////////////////////////////////////////////
+// Examples of Stochastic Petri Nets
+// from "Stochastic Petri Nets: Modelling, Stability, Simulation"
+// by Peter Haas
+//////////////////////////////////////////////////////////////////////
+
+// Haas, Ex. 1.4 p.19
+[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll }
+(
+a = PetriNetN(
+		(
+			transition: \e1,
+			inputPlaces: [\d1],
+			outputPlaces: [\d2,\d1],
+			inhibitorPlaces: [],
+			clock: 1,
+			source: ( type: \on, freq: 400 )
+		),
+		(
+			transition: \e2,
+			inputPlaces: [\d2],
+			outputPlaces: [\d1],
+			inhibitorPlaces: [],
+			clock: 1,
+			source: ( type: \on, freq: 600, amp: 0.4 )
+		)
+)
+)
+
+(
+var transition, p = 0.6;
+transition = a.at(\e1);
+transition.updateOutputPlaces_( {| outputPlaces, net |
+	if( p.coin ){ 
+		net[ \d2 ].addOneToken
+	}{
+		net[ \d1 ].addOneToken
+	}
+}
+)
+)
+
+// if you set marking while the net is playing
+// you have to recompute newTransitions.
+// NOT CURRENTLY SUPPORTED
+a.setMarking( ( d1:1, d2:0) )
+
+a.marking
+
+p = a.pattern.asStream;
+p.next(())
+
+// debuging
+p = PNPostState( a ).routine
+p.next;
+
+a.play
+a.stop
+
+
+a.push;
+~e1.clock = 1
+~e2.clock = 1
+~e1.clock = { 0.7.rrand( 1.0 ) }
+~e2.clock = { (0.1,0.2..1.0).choose  }
+~e2.source = ( type: \on, freq: 230, amp: 0.4 )
+
+
+(
+~e2.enabledFunction_( {| inputPlaces, inhibitorPlaces |
+	var sum;
+	sum = inputPlaces.collect {|p| p.tokens }.sum;
+	sum.postln;
+	sum > 5
+})
+)
+
+~e2.enabledFunction_( PNTransitionN.enabledFunctionDefault )
+
+
+// Haas, Ex. 2.1 p.24
+
+(
+[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+
+a = PetriNetN(
+	(
+		transition: \e1,
+		inputPlaces: [\d1, 3],
+		outputPlaces: [\d2],
+		inhibitorPlaces: [],
+		clock: { 1.0.rrand( 2.0 ) },
+		source: ( type: \on, freq: 300, pan: -0.5, amp: 0.5 )
+	),
+	(
+		transition: \e2,
+		inputPlaces: [\d2,\d7],
+		outputPlaces: [\d3],
+		inhibitorPlaces: [],
+		clock: 0
+	),
+	(
+		transition: \e3,
+		inputPlaces: [\d3],
+		outputPlaces: [\d1,\d7],
+		inhibitorPlaces: [],
+		clock: { 2.0.rrand( 4.0 ) },
+		source: ( type: \on, freq: 550, pan: -0.5, amp: 0.8 )
+	),
+	(
+		transition: \e4,
+		inputPlaces: [\d4, 5],
+		outputPlaces: [\d5],
+		inhibitorPlaces: [],
+		clock: { 1.0.rrand( 2.0 ) },
+		source: ( type: \on, freq: 400, pan: 0.5, amp: 0.5 )
+	),
+	(
+		transition: \e5,
+		inputPlaces: [\d5,\d7,1],
+		outputPlaces: [\d6],
+		inhibitorPlaces: [\d2],
+		clock: 0
+	),
+	(
+		transition: \e6,
+		inputPlaces: [\d6],
+		outputPlaces: [\d4,\d7],
+		inhibitorPlaces: [],
+		clock: { 1.0.rrand( 2.0 ) },
+		source: ( type: \on, freq: 700, pan: 0.5, amp: 0.8 )
+	)
+);
+)
+
+a.setMarking( (\d1: 3, \d2:0, \d3: 0, \d4:7, \d5:0, \d6:0, \d7:1) );
+a.marking
+
+p = PNPostState( a ).routine
+p.next
+p.play
+p.stop
+
+a.play
+a.stop

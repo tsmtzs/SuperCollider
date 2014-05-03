@@ -501,14 +501,14 @@ TimedSamplePath : PNSamplePath {
 	computeFiringTransitions {
 		if( enabledTransitions.isEmpty ){ 
 			// maybe return nil so that the PNPattern stop?
-			^ Error("There are no enabled transitions in petri net"+this.name.asString).throw; 
+			^ Error("There are no enabled transitions in petri net").throw; 
 		};
 		holdingTime = enabledTransitions.collect{| aSymbol | 
 			petriNet[ aSymbol ].clockReading 
 		}.minItem;
 		firingTransitions = enabledTransitions.select {| aSymbol |
 			// petriNet[ aSymbol ].clockReading == holdingTime;
-			petriNet[ aSymbol ].clockReading.equalWithPrecision( holdingTime, 0.00000001 ); // ????
+			petriNet[ aSymbol ].clockReading.equalWithPrecision( holdingTime, 0.00000000000001 ); // ????
 		};
 	}
 	//step 3:
@@ -701,18 +701,19 @@ PNEventPattern : Pattern {
 				newTrans.do {| aSymbol, i |
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
-					ev = petriNet[ aSymbol ].source.next( inevent ); // oneEventAssuption
-					// ev = streamDict.at( aSymbol ).next( inevent );
+					ev = petriNet[ aSymbol ].source; // oneEventAssuption
+					// ev = streamDict.at( aSymbol );
+					if( ev.notNil ){
+						ev = ev.next( inevent );
+						ev[ \delta ] = if( i == ( size - 1 ) ){ 
+						}{ 
+							0
+						};
 
-					ev[ \delta ] = if( i == ( size - 1 ) ){ 
-						samplePath.holdingTime  
-					}{ 
-						0
+						cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
+						this.prAddEndStream( ev, cleanupEvents );
+						inevent = ev.yield;
 					};
-
-					cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
-					this.prAddEndStream( ev, cleanupEvents );
-					inevent = ev.yield;
 				};
 			};
 
@@ -722,9 +723,12 @@ PNEventPattern : Pattern {
 			.zeroRemainingClocks;
 
 			samplePath.firingTransitions.do {| aSymbol |
-				ev = cleanupEvents.at( aSymbol ).put( \delta, 0 );
-				this.prAddEndStream( ev, cleanupEvents );
-				inevent = ev.yield;
+				ev = cleanupEvents.at( aSymbol );
+				if( ev.notNil ){
+					ev.put( \delta, 0 );
+					this.prAddEndStream( ev, cleanupEvents );
+					inevent = ev.yield;
+				};
 			};
 
 		};
