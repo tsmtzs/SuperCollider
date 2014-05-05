@@ -501,7 +501,8 @@ TimedSamplePath : PNSamplePath {
 	computeFiringTransitions {
 		if( enabledTransitions.isEmpty ){ 
 			// maybe return nil so that the PNPattern stop?
-			^ Error("There are no enabled transitions in petri net").throw; 
+			"There are no enabled transitions in petri net. The routine stops.".inform;
+			thisThread.stop;
 		};
 		holdingTime = enabledTransitions.collect{| aSymbol | 
 			petriNet[ aSymbol ].clockReading 
