@@ -438,7 +438,6 @@ PNSamplePath {
 			};
 			b1.put( transition, unionOfB1.asArray );
 		};
-		b1.debug("b1");
 	}
 }
 
@@ -701,18 +700,15 @@ PNEventPattern : Pattern {
 			if( newTrans.notEmpty ){
 				size = newTrans.size;
 
-				newTrans.debug("New trans in embedInStream");
 				newTrans.do {| aSymbol, i |
-					aSymbol.debug("transition");
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
 					ev = petriNet[ aSymbol ].source; // oneEventAssuption
 					// ev = streamDict.at( aSymbol );
 					if( ev.notNil ){
-						ev.debug("play event");
 						ev = ev.next( inevent );
 						ev[ \delta ] = if( i == ( size - 1 ) ){
-							samplePath.holdingTime.debug("holding time");
+							samplePath.holdingTime
 						}{ 
 							0
 						};
