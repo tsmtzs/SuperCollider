@@ -427,6 +427,7 @@ PNSamplePath {
 		unionOfB1 = Set[];
 		transitions.do {| transition |
 			unionOfB1.clear;
+			unionOfB1.add( transition );
 			transitions.do {| trans |
 				if( 
 					( petriNet.outputPlacesOf( transition ).as(Set) & petriNet.inputPlacesOf( trans ).as(Set) ).notEmpty 
@@ -435,8 +436,9 @@ PNSamplePath {
 						unionOfB1.add( trans );
 					};
 			};
-			if( unionOfB1.notEmpty ){ b1.put( transition, unionOfB1.add( transition ).asArray ) };
+			b1.put( transition, unionOfB1.asArray );
 		};
+		b1.debug("b1");
 	}
 }
 
@@ -699,14 +701,18 @@ PNEventPattern : Pattern {
 			if( newTrans.notEmpty ){
 				size = newTrans.size;
 
+				newTrans.debug("New trans in embedInStream");
 				newTrans.do {| aSymbol, i |
+					aSymbol.debug("transition");
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
 					ev = petriNet[ aSymbol ].source; // oneEventAssuption
 					// ev = streamDict.at( aSymbol );
 					if( ev.notNil ){
+						ev.debug("play event");
 						ev = ev.next( inevent );
-						ev[ \delta ] = if( i == ( size - 1 ) ){ 
+						ev[ \delta ] = if( i == ( size - 1 ) ){
+							samplePath.holdingTime.debug("holding time");
 						}{ 
 							0
 						};
@@ -803,14 +809,14 @@ PNPostState {
 		^ Routine {
 			samplePath.computeInitEnabledTransitions;
 			loop {
-				samplePath.computeFiringTransitions
-				.nextMarkingChangeAt;
+				samplePath.computeFiringTransitions;
 
 				this.currentStateAsString.yield;
 
 				// nil.yield;
 
-				samplePath.generateNewMarking
+				samplePath.nextMarkingChangeAt
+				.generateNewMarking
 				.computeOldTransitions
 				.computeNewTransitions
 				.zeroRemainingClocks

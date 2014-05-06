@@ -460,3 +460,115 @@ p.stop
 
 a.play
 a.stop
+
+// Haas, Ex. 2.2 p.29
+
+(
+[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+
+a = PetriNetN(
+	(
+		transition: \e1,
+		inputPlaces: [\d1],
+		outputPlaces: [\d2],
+		inhibitorPlaces: [],
+		clock: { 1.0 },
+		source: ( type: \on, freq: 300, amp: 0.2, pan: -0.5 )
+	),
+	(
+		transition: \e2,
+		inputPlaces: [\d2],
+		outputPlaces: [\d1],
+		inhibitorPlaces: [],
+		clock: { 0.5 },
+		source: ( type: \on, freq: 350, amp: 0.2, pan: -0.5 )
+	),
+	(
+		transition: \e3,
+		inputPlaces: [\d3],
+		outputPlaces: [\d4],
+		inhibitorPlaces: [],
+		clock: { 1.0 },
+		source: ( type: \on, freq: 500, amp: 0.2, pan: 0.5 )
+	),
+	(
+		transition: \e4,
+		inputPlaces: [\d4],
+		outputPlaces: [\d3],
+		inhibitorPlaces: [\d2],
+		clock: { 0.5 },
+		source: ( type: \on, freq: 570, amp: 0.2, pan: 0.5 )
+	)
+)
+)
+
+a.setMarking( (d1: 3, d2: 0, d3: 4, d4: 0 ) )
+
+a.play
+
+a.push;
+~e1.clock = { 0.5.rrand(1.5) }
+
+a.pop
+
+a.stop
+
+// Ex. 2.4 p.31 Haas
+
+(
+[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+
+a = PetriNetN(
+	(
+		transition: \e1,
+		inputPlaces: [\d1, 1],
+		outputPlaces: [\d2,\d1],
+		inhibitorPlaces: [],
+		clock: 5,
+		source: ( type: \on, freq: 300 )
+	),
+	(
+		transition: \e2,
+		inputPlaces: [\d2],
+		outputPlaces: [\d2,\d3],
+		inhibitorPlaces: [],
+		clock: 0,
+		updateOutputPlaces: {| outputPlaces, aPetriNet |
+			var p, d3Tokens;
+			d3Tokens = aPetriNet.at(\d3).tokens;
+			// p = ( d3Tokens/(d3Tokens + 7.5) - 1 ).abs;
+			if( d3Tokens < 5  ){
+				outputPlaces.do {|aPlace| aPlace.addOneToken; }
+			}{
+				aPetriNet.at(\d3).addOneToken;
+			}
+		}
+	),
+	(
+		transition: \e3,
+		inputPlaces: [\d3],
+		outputPlaces: [\d4],
+		inhibitorPlaces: [\d2],
+		clock: 0
+	),
+	(
+		transition: \e4,
+		inputPlaces: [\d4],
+		outputPlaces: [],
+		inhibitorPlaces: [],
+		clock: 1,
+		source: ( type: \on, freq: { 500.0.rrand( 600.0 ) }, pan: { 1.0.rand2 } )
+	)
+)
+)
+
+a.play
+a.stop
+
+p = PNPostState( a ).routine.asStream
+a.marking
+p.next
+
+p = a.pattern.asStream
+20.do { p.next(()).postln }
+p.next(())
