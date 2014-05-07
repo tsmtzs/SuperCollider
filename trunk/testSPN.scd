@@ -524,8 +524,8 @@ a = PetriNetN(
 		inputPlaces: [\d1, 1],
 		outputPlaces: [\d2,\d1],
 		inhibitorPlaces: [],
-		clock: 5,
-		source: ( type: \on, freq: 300 )
+		clock: 3,
+		source: ( type: \on, freq: 300, pan: -0.6 )
 	),
 	(
 		transition: \e2,
@@ -537,7 +537,7 @@ a = PetriNetN(
 			var p, d3Tokens;
 			d3Tokens = aPetriNet.at(\d3).tokens;
 			// p = ( d3Tokens/(d3Tokens + 7.5) - 1 ).abs;
-			if( d3Tokens < 5  ){
+			if( d3Tokens < 2  ){
 				outputPlaces.do {|aPlace| aPlace.addOneToken; }
 			}{
 				aPetriNet.at(\d3).addOneToken;
@@ -556,8 +556,8 @@ a = PetriNetN(
 		inputPlaces: [\d4],
 		outputPlaces: [],
 		inhibitorPlaces: [],
-		clock: 1,
-		source: ( type: \on, freq: { 500.0.rrand( 600.0 ) }, pan: { 1.0.rand2 } )
+		clock: 0.4,
+		source: ( type: \on, freq: { 500.0.rrand( 600.0 ) }, pan: 0.6 )
 	)
 )
 )

@@ -664,7 +664,8 @@ PNEventPattern : Pattern {
 	// 		str.postln;
 	// 		////////////////////////////////////////
 	// 		0.5.wait;
-	// 		samplePath.generateNewMarking
+	// 		samplePath.nextMarkingChangeAt
+	// 		.generateNewMarking
 	// 		.computeOldTransitions
 	// 		.computeNewTransitions
 	// 		.zeroRemainingClocks;
@@ -699,7 +700,6 @@ PNEventPattern : Pattern {
 
 			if( newTrans.notEmpty ){
 				size = newTrans.size;
-
 				newTrans.do {| aSymbol, i |
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
@@ -718,8 +718,12 @@ PNEventPattern : Pattern {
 						inevent = ev.yield;
 					};
 				};
+			}{
+				ev = ( type: \rest, delta: samplePath.holdingTime );
+				this.prAddEndStream( ev, cleanupEvents );
+				inevent = ev.yield;
 			};
-
+			
 			samplePath.generateNewMarking
 			.computeOldTransitions
 			.computeNewTransitions
