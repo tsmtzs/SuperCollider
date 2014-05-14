@@ -320,7 +320,7 @@ PetriNetN : Environment {
 	}
 
 	marking {
-		^ this.places.collect {| place | [ place.name, place.tokens ] }.flat.as( Event )
+		^ this.places.collect {| place | [ place.name, place.tokens ] }.flatten.as( Event )
 	}
 
 	setMarking {| anIdentityDictionary |

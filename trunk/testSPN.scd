@@ -572,3 +572,85 @@ p.next
 p = a.pattern.asStream
 20.do { p.next(()).postln }
 p.next(())
+
+// Ex. 2.6 p.33 Haas
+
+~rings = 3;
+
+(
+~port = {| index, rings = 3 |
+	var transition;
+
+	[
+		(
+			transition: ( "e1" ++ index ).asSymbol,
+			inputPlaces: [ ( "d2" ++ index ).asSymbol ],
+			outputPlaces: [ ( "d1" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: { [0.25, 0.5, 0.75, 1.0 ].choose }
+		),
+		(
+			transition: ( "e2" ++ index).asSymbol,
+			inputPlaces: [ ( "d1" ++ index ).asSymbol, ( "d3" ++ index ).asSymbol ],
+			outputPlaces: [ ( "d2" ++ index).asSymbol, ( "d4" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: { [ 0.25, 0.5, 0.75, 1.0 ].choose }
+		),
+		(
+			transition: ( "e3" ++ index ).asSymbol,
+			inputPlaces: [ ( "d4" ++ ( index - 1 ).mod( rings ) ).asSymbol  ],
+			outputPlaces: [ ( "d3" ++ index ).asSymbol, ( "d4" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: { 1.5 },
+			updateOutputPlaces: {| outputPlaces, aPetriNet |
+				var d1Tokens;
+				d1Tokens = aPetriNet.at( ( "d1" ++ index ).asSymbol );
+				if( d1Tokens == 1 ){
+					aPetriNet.at( ( "d3" ++ index ).asSymbol ).addOneToken;
+				}{
+					aPetriNet.at( ( "d4" ++ index ).asSymbol ).addOneToken;
+				}
+			}
+		)
+	]
+}
+)
+
+(
+var net;
+
+[ PNTransitionN, PNPlaceN ].do (_.clearAll);
+
+net = ~rings.collect {|i| ~port.( i, ~rings ) }.flatten;
+
+a = PetriNetN( *net );
+)
+
+(
+~perRingInitMarking = {|index, d3 = 0|
+	(
+		( "d1" ++ index ).asSymbol : 1,
+		( "d2" ++ index ).asSymbol : 0,
+		( "d3" ++ index ).asSymbol : d3,
+		( "d4" ++ index ).asSymbol : 0
+	)
+}
+)
+
+
+a.marking
+
+(
+a.setMarking(
+	().putAll( *( 
+		~rings.collect {|i| 
+			if( i == 0 ){
+				~perRingInitMarking.( i, 1 )
+			}{
+				~perRingInitMarking.( i )
+			}
+		}
+	)
+	)
+)
+)
