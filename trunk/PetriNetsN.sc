@@ -705,18 +705,18 @@ PNEventPattern : Pattern {
 					// and only one at a time then you have real time access to source
 					ev = petriNet[ aSymbol ].source; // oneEventAssuption
 					// ev = streamDict.at( aSymbol );
-					if( ev.notNil ){
-						ev = ev.next( inevent );
-						ev[ \delta ] = if( i == ( size - 1 ) ){
-							samplePath.holdingTime
-						}{ 
-							0
-						};
 
-						cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
-						this.prAddEndStream( ev, cleanupEvents );
-						inevent = ev.yield;
+					ev = ev.next( inevent ) ?? { ( type: \rest ) };
+					ev[ \delta ] = if( i == ( size - 1 ) ){
+						samplePath.holdingTime
+					}{ 
+						0
 					};
+
+					cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
+					this.prAddEndStream( ev, cleanupEvents );
+					inevent = ev.yield;
+
 				};
 			}{
 				ev = ( type: \rest, delta: samplePath.holdingTime );

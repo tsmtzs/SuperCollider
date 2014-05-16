@@ -587,7 +587,7 @@ p.next(())
 			inputPlaces: [ ( "d2" ++ index ).asSymbol ],
 			outputPlaces: [ ( "d1" ++ index ).asSymbol ],
 			inhibitorPlaces: [],
-			clock: { [0.25, 0.5, 0.75, 1.0 ].choose }
+			clock: { [ 0.25, 0.5, 0.75, 1.0 ].choose }
 		),
 		(
 			transition: ( "e2" ++ index).asSymbol,
@@ -654,3 +654,8 @@ a.setMarking(
 	)
 )
 )
+
+
+p = PNPostState( a ).routine.asStream
+a.marking
+p.next
