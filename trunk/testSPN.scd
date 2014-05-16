@@ -587,14 +587,16 @@ p.next(())
 			inputPlaces: [ ( "d2" ++ index ).asSymbol ],
 			outputPlaces: [ ( "d1" ++ index ).asSymbol ],
 			inhibitorPlaces: [],
-			clock: { [ 0.25, 0.5, 0.75, 1.0 ].choose }
+			clock: { [ 0.25, 0.5, 0.75, 1.0 ].choose },
+			source: ( type: \on, freq: 100.rrand( 200 ), amp: 0.3 )
 		),
 		(
 			transition: ( "e2" ++ index).asSymbol,
 			inputPlaces: [ ( "d1" ++ index ).asSymbol, ( "d3" ++ index ).asSymbol ],
 			outputPlaces: [ ( "d2" ++ index).asSymbol, ( "d4" ++ index ).asSymbol ],
 			inhibitorPlaces: [],
-			clock: { [ 0.25, 0.5, 0.75, 1.0 ].choose }
+			clock: { [ 0.25, 0.5, 0.75, 1.0 ].choose },
+			source: ( type: \on, freq: 300.rrand( 400 ) )
 		),
 		(
 			transition: ( "e3" ++ index ).asSymbol,
@@ -602,6 +604,7 @@ p.next(())
 			outputPlaces: [ ( "d3" ++ index ).asSymbol, ( "d4" ++ index ).asSymbol ],
 			inhibitorPlaces: [],
 			clock: { 1.5 },
+			source: ( type: \on, freq: 500.rrand( 600 ) )
 			updateOutputPlaces: {| outputPlaces, aPetriNet |
 				var d1Tokens;
 				d1Tokens = aPetriNet.at( ( "d1" ++ index ).asSymbol );
@@ -659,3 +662,126 @@ a.setMarking(
 p = PNPostState( a ).routine.asStream
 a.marking
 p.next
+
+a.play;
+a.stop;
+
+// Ex. 2.7 p.36 Haas
+(
+SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
+	var son = MdaPiano.ar(freq, gate, release: 0.9, stereo: 0.3, sustain: 0);
+	DetectSilence.ar(son, 0.01, doneAction:2);
+	Out.ar(out, son * 0.1);
+}).add;
+)
+
+~rings = 5;
+
+(
+~port = {| index, rings = 3 |
+	var transition;
+	[
+		(
+			transition: ( "e1" ++ index ).asSymbol,
+			inputPlaces: [ ( "d2" ++ index ).asSymbol ],
+			outputPlaces: [ ( "d1" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: { [ 0.5, 1.0, 1.5, 2.0 ].choose }
+		),
+		(
+			transition: ( "e2" ++ index).asSymbol,
+			inputPlaces: [ ( "d3" ++ index ).asSymbol ],
+			outputPlaces: [ ( "d2" ++ index).asSymbol, ( "d4" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock:  [ 0.25, 2/7, 4/9 ].choose 
+		),
+		(
+			transition: ( "e3" ++ index ).asSymbol,
+			inputPlaces: [ ( "d4" ++ ( index - 1 ).mod( rings ) ).asSymbol  ],
+			outputPlaces: [ ( "d5" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: { [ 0.25, 4/11 ].choose }
+		),
+		(
+			transition: ( "e4" ++ index ).asSymbol,
+			inputPlaces: [ ("d1" ++ index ).asSymbol, ("d5" ++ index ).asSymbol  ],
+			outputPlaces: [ ( "d3" ++ index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: 0
+		),
+		(
+			transition: ( "e5" ++ index ).asSymbol,
+			inputPlaces: [ ("d5" ++ index ).asSymbol  ],
+			outputPlaces: [ ( "d4" ++ index ).asSymbol ],
+			inhibitorPlaces: [ ( "d1" ++ index ).asSymbol  ],
+			clock: 0
+		)
+	]
+}
+)
+
+(
+var net;
+
+[ PNTransitionN, PNPlaceN ].do (_.clearAll);
+
+net = ~rings.collect {|i| ~port.( i, ~rings ) }.flat;
+
+a = PetriNetN( *net );
+)
+
+(
+~perRingInitMarking = {|index, d3 = 0|
+	(
+		( "d1" ++ index ).asSymbol : 1,
+		( "d2" ++ index ).asSymbol : 0,
+		( "d3" ++ index ).asSymbol : d3,
+		( "d4" ++ index ).asSymbol : 0,
+		( "d5" ++ index ).asSymbol : 0
+	)
+}
+)
+
+(
+a.setMarking(
+	().putAll( *( 
+		~rings.collect {|i| 
+			if( i == 0 ){
+				~perRingInitMarking.( i, 1 )
+			}{
+				~perRingInitMarking.( i, [0,1].wchoose([0.9,0.1]).postln )
+			}
+		}
+	)
+	)
+)
+)
+
+
+(
+var scale;
+scale = Scale.scriabin.degrees;
+~perRingSources ={| index, aPetriNet|
+	(
+		( "e1" ++ index ).asSymbol : (
+			type: \on, instrument: \help_mdapiano, freq: { 
+			( 50.rrand(55) + scale + [-12,0,12].choose ).midicps.choose 
+			}, amp: 0.2 
+		),
+		( "e2" ++ index ).asSymbol : (
+			type: \on, instrument: \help_mdapiano, freq: ( 62 + scale + [-12,0,12].choose ).midicps.choose, amp: 0.1
+		),
+		( "e3" ++ index ).asSymbol : (
+			type: \on, instrument: \help_mdapiano, freq: { 
+			( 74 + scale + [-12,0,12].choose ).midicps.choose 
+		}, amp: 0.2
+		)
+	)
+};
+)
+
+~sourceEvent = ().putAll( *(~rings.collect {|i| ~perRingSources.( i, a ) } ) );
+a.setSources( ~sourceEvent )
+
+a.play
+a.stop
