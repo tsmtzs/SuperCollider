@@ -785,3 +785,94 @@ a.setSources( ~sourceEvent )
 
 a.play
 a.stop
+
+// Ex. 2.9 p.41 Haas
+(
+~updateFunction = {| outputPlaces, aPetriNet |
+	var place, name, tokens;
+	place = aPetriNet.places.select {| p |
+		name = p.name;
+		tokens = p.tokens;
+		name == \d4 or: { name == \d5 } or: { name == \d6 }
+		and: { tokens == 0 }
+	};
+	if( place.notEmpty ){ place.choose.addOneToken; };
+}
+)
+
+(
+[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+
+a = PetriNetN(
+	(
+		transition: \e1,
+		inputPlaces: [\d1],
+		outputPlaces: [\d2, \d9],
+		inhibitorPlaces: [],
+		clock: 1,
+		source: ( type: \on, freq: 50.midicps, amp: 0.2, instrument: \help_mdapiano )
+	),
+	(
+
+		transition: \e2,
+		inputPlaces: [\d2],
+		outputPlaces: [\d4, \d5,\d6],
+		inhibitorPlaces: [],
+		clock: 1,
+		source: ( type: \on, freq: 60.midicps, amp: 0.2, instrument: \help_mdapiano ),
+		updateOutputPlaces: ~updateFunction
+	),
+	(
+		transition: \e3,
+		inputPlaces: [\d3],
+		outputPlaces: [\d4, \d5,\d6],
+		inhibitorPlaces: [],
+		clock: 2,
+		source: ( type: \on, freq: 80.midicps, amp: 0.2, instrument: \help_mdapiano )
+		updateOutputPlaces: ~updateFunction
+	),
+	(
+		transition: \e4,
+		inputPlaces: [\d4,\d5,\d6],
+		outputPlaces: [\d7, \d8,\d3],
+		inhibitorPlaces: [],
+		clock: 1,
+		updateOutputPlaces: {| outputPlaces, aPetriNet |
+			var n1, n2;
+			n1 = 4.rand;
+			n2 = (4 - n1).rand;
+			aPetriNet.at(\d7).addTokens( n1 );
+			aPetriNet.at(\d8).addTokens( n2 );
+			n2 = 3 - ( n1 + n2 );
+			aPetriNet.at(\d3).addTokens( n2 );
+		}
+	),
+	(
+		transition: \e5,
+		inputPlaces: [\d7,\d9],
+		outputPlaces: [\d1],
+		inhibitorPlaces: [\d8],
+		clock: 0
+	),
+	(
+		transition: \e6,
+		inputPlaces: [\d8,\d9],
+		outputPlaces: [\d1],
+		inhibitorPlaces: [],
+		clock: 0
+	)
+)
+)
+
+(
+a.setMarking( 
+	( d1:0, d2:0, d3:1, d4:0, d5:0, d6:0, d7:1, d8:1, d9:1 ) 
+)
+)
+
+a.play;
+a.stop;
+
+a.push
+~e2.clock = 0.5
+a.pop
