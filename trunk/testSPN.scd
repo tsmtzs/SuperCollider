@@ -876,3 +876,140 @@ a.stop;
 a.push
 ~e2.clock = 0.5
 a.pop
+
+// Ex. 2.10 p.44 Haas
+(
+~totalParts = 3;
+
+~updateFunction = {| outputPlaces, aPetriNet |
+	var place, name, tokens;
+	place = aPetriNet.places.select {| p |
+		name = p.name;
+		tokens = p.tokens;
+		name == \d41 or: { name == \d42 } or: { name == \d43 }
+		and: { tokens == 0 }
+	};
+	if( place.notEmpty ){ place.choose.addOneToken; };
+	aPetriNet.at(\d32).addOneToken;
+};
+
+~updateInputPlacesIf = {| aPNPlace |
+	{| inputPlaces, aPetriNet |
+		aPetriNet.at( aPNPlace ).removeOneToken;
+	}
+}
+)
+
+(
+[ PNTimedTransitionN, PNPlaceN ].do {|a| a.clearAll };
+
+a = PetriNetN(
+	(
+		transition: \e211,
+		inputPlaces: [\d111,\d211],
+		outputPlaces: [\d112,\d31],
+		inhibitorPlaces: [],
+		clock: 0.5,
+		source: ( type: \on, freq: 60.midicps )
+	),
+	(
+		transition: \e212,
+		inputPlaces: [\d112,\d212],
+		outputPlaces: [\d41,\d42,\d43,\d32],
+		inhibitorPlaces: [],
+		clock: 0.5,
+		updateOutputPlaces: ~updateFunction,
+		source: ( type: \on, freq: 53.midicps )
+	),
+	(
+		transition: \e3,
+		inputPlaces: [\d41,\d42,\d43],
+		outputPlaces: [\d111,\d121,\d123],
+		inhibitorPlaces: [],
+		clock: 0,
+		updateOutputPlaces: {| outputPlaces, aPetriNet |
+			var n1, n2;
+			n1 = ( ~totalParts + 1 ).rand;
+			n2 = ( ~totalParts - n1).rand;
+			aPetriNet.at(\d111).addTokens( n1 );
+			aPetriNet.at(\d121).addTokens( n2 );
+			n2 = ~totalParts - n1 - n2;
+			aPetriNet.at(\d123).addTokens( n2 );
+			// [ n1, n2, n2 ].postln;
+		}
+	),
+	(
+		transition: \e111,
+		inputPlaces: [\d111,\d31],
+		outputPlaces: [\d211],
+		inhibitorPlaces: [\d121],
+		clock: 0,
+		updateInputPlaces: ~updateInputPlacesIf.( \d31 )
+	),
+	(
+		transition: \e112,
+		inputPlaces: [\d112,\d32],
+		outputPlaces: [\d212],
+		inhibitorPlaces: [\d122],
+		clock: 0,
+		updateInputPlaces: ~updateInputPlacesIf.( \d32 )
+	),
+	(
+		transition: \e121,
+		inputPlaces: [\d31,\d121],
+		outputPlaces: [\d221],
+		inhibitorPlaces: [],
+		clock: 0,
+		updateInputPlaces: ~updateInputPlacesIf.( \d31 )
+	),
+	(
+		transition: \e122,
+		inputPlaces: [\d32,\d122],
+		outputPlaces: [\d222],
+		inhibitorPlaces: [],
+		clock: 0,
+		updateInputPlaces: ~updateInputPlacesIf.( \d32 )
+	),
+	(
+		transition: \e221,
+		inputPlaces: [\d121,\d221],
+		outputPlaces: [\d122,\d31],
+		inhibitorPlaces: [],
+		clock: 0.5,
+		source: ( type: \on, freq: 64.midicps )
+	),
+	(
+		transition: \e222,
+		inputPlaces: [\d122,\d222],
+		outputPlaces: [\d41,\d42,\d43,\d32],
+		inhibitorPlaces: [],
+		clock: 0.5,
+		updateOutputPlaces: ~updateFunction,
+		source: ( type: \on, freq: 57.midicps )
+	),
+	(
+		transition: \e223,
+		inputPlaces: [\d123],
+		outputPlaces: [\d41,\d42,\d43],
+		inhibitorPlaces: [],
+		clock: 0.5,
+		updateOutputPlaces: ~updateFunction,
+		source: ( type: \on, freq: 62.midicps )
+	)
+)
+)
+
+(
+a.setMarking(
+	a.marking.keysValuesChange {| key, value |
+		value = if( 
+			key == \d41 or: { key == \d42 } or: { key == \d43 } or: { key == \d31 } or: { key == \d32 } ){ 1 }{ 0 };
+	}
+)
+)
+
+a.play;
+a.stop;
+
+p = PNPostState( a ).routine
+p.next
