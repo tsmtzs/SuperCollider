@@ -910,7 +910,7 @@ a = PetriNetN(
 		outputPlaces: [\d112,\d31],
 		inhibitorPlaces: [],
 		clock: 0.5,
-		source: ( type: \on, freq: 60.midicps )
+		source: ( type: \on, freq: 60.midicps, instrument: \help_mdapiano )
 	),
 	(
 		transition: \e212,
@@ -919,7 +919,7 @@ a = PetriNetN(
 		inhibitorPlaces: [],
 		clock: 0.5,
 		updateOutputPlaces: ~updateFunction,
-		source: ( type: \on, freq: 53.midicps )
+		source: ( type: \on, freq: 53.midicps, instrument: \help_mdapiano )
 	),
 	(
 		transition: \e3,
@@ -976,7 +976,7 @@ a = PetriNetN(
 		outputPlaces: [\d122,\d31],
 		inhibitorPlaces: [],
 		clock: 0.5,
-		source: ( type: \on, freq: 64.midicps )
+		source: ( type: \on, freq: 64.midicps, instrument: \help_mdapiano )
 	),
 	(
 		transition: \e222,
@@ -985,7 +985,7 @@ a = PetriNetN(
 		inhibitorPlaces: [],
 		clock: 0.5,
 		updateOutputPlaces: ~updateFunction,
-		source: ( type: \on, freq: 57.midicps )
+		source: ( type: \on, freq: 57.midicps, instrument: \help_mdapiano )
 	),
 	(
 		transition: \e223,
@@ -994,7 +994,7 @@ a = PetriNetN(
 		inhibitorPlaces: [],
 		clock: 0.5,
 		updateOutputPlaces: ~updateFunction,
-		source: ( type: \on, freq: 62.midicps )
+		source: ( type: \on, freq: 62.midicps, instrument: \help_mdapiano )
 	)
 )
 )
@@ -1010,6 +1010,76 @@ a.setMarking(
 
 a.play;
 a.stop;
+
+p = PNPostState( a ).routine
+p.next
+
+//////////////////////////////////////////////////////////////////////
+// testing the abiltity to set args of a node
+
+(
+[ PNTimedTransitionN, PNPlaceN ].do {|a| a.clearAll };
+
+a = PetriNetN(
+	(
+		transition: \e0,
+		inputPlaces: [ \d0, 1 ],
+		outputPlaces: [ \d1, \d2 ],
+		inhibitorPlaces: [],
+		clock: 0
+	),
+	( 
+		transition: \e1,
+		inputPlaces: [ \d1 ],
+		outputPlaces: [ \d0 ],
+		inhibitorPlaces: [ ],
+		source: {| aPetriNet | 
+			var id = s.nextNodeID;
+			aPetriNet.put( ( 'e0' ++ 'ID').asSymbol, id );
+			( type: \on, id: id )
+		},
+		clock: { 10.0 }
+	),
+	(
+		transition: \e2,
+		inputPlaces: [ \d2 ],
+		outputPlaces: [ \d3 ],
+		inhibitorPlaces: [],
+		clock: 0,
+		updateOutputPlaces: {| outputPlaces, aPetriNet |
+			outputPlaces.do {|p| p.addTokens( 5 ) };
+		}
+	),
+	(
+		transition: \e3,
+		inputPlaces: [ \d3 ],
+		outputPlaces: [],
+		inhibitorPlaces: [],
+		clock: 1,
+		source: {| aPetriNet |
+			var midinote = 50.rrand( 70 );
+			( type: \set, id: aPetriNet.at('e0ID'), args: \midinote, midinote: midinote  )
+		}
+	)
+)
+)
+
+a.marking
+
+(
+a.setMarking(
+	a.marking.keysValuesChange {| key, value |
+		value = if( key == \d0 ){ 1 }{ 0 };
+	}
+)
+)
+
+p = a.pattern.asStream
+20.do { p.next(()).postln }
+p.next(())
+
+a.play
+a.stop
 
 p = PNPostState( a ).routine
 p.next

@@ -703,7 +703,7 @@ PNEventPattern : Pattern {
 				newTrans.do {| aSymbol, i |
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
-					ev = petriNet[ aSymbol ].source; // oneEventAssuption
+					ev = petriNet[ aSymbol ].source.( net ); // oneEventAssuption
 					// ev = streamDict.at( aSymbol );
 
 					ev = ev.next( inevent ) ?? { ( type: \rest ) };
@@ -749,7 +749,7 @@ PNEventPattern : Pattern {
 				aDict.do {| ev |
 					inev = ev.next( inev ).yield;
 				};
-				nil;
+				nil;					// remove this?
 			}
 		)
 	}
