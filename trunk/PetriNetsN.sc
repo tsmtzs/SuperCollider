@@ -676,7 +676,7 @@ PNEventPattern : Pattern {
 
 	embedInStream {| inevent |
 		var samplePath, transitions, streamDict, net, ev;
-		var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType;
+		var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType, cleanupEventType;
 		var size;
 
 		cleanupEvents = IdentityDictionary[];
@@ -713,8 +713,11 @@ PNEventPattern : Pattern {
 						0
 					};
 
-					cleanupEvents.put( aSymbol,  EventTypesWithCleanup.cleanupEvent( ev ) );
-					this.prAddEndStream( ev, cleanupEvents );
+					cleanupEventType = EventTypesWithCleanup.cleanupEvent( ev );
+					if ( cleanupEventType.notEmpty ){
+						cleanupEvents.put( aSymbol, cleanupEventType  );
+						this.prAddEndStream( ev, cleanupEvents );
+					};
 					inevent = ev.yield;
 
 				};
@@ -730,10 +733,10 @@ PNEventPattern : Pattern {
 			.zeroRemainingClocks;
 
 			samplePath.firingTransitions.do {| aSymbol |
-				ev = cleanupEvents.at( aSymbol );
+				ev = cleanupEvents.removeAt( aSymbol );
 				if( ev.notNil ){
 					ev.put( \delta, 0 );
-					this.prAddEndStream( ev, cleanupEvents );
+					this.prAddEndStream( ev, cleanupEvents ); // remove this line?
 					inevent = ev.yield;
 				};
 			};
@@ -747,6 +750,7 @@ PNEventPattern : Pattern {
 			\endStream,
 			r {| inev |
 				aDict.do {| ev |
+					ev.put( \delta, 0 );
 					inev = ev.next( inev ).yield;
 				};
 				nil;					// remove this?
@@ -922,4 +926,8 @@ PNPostState {
 
 		^Score(bundleList.add([ duration + timeOffset + releaseTime, [\c_set, 0, 0]]) );
 	}
+}
+
++ Object {
+	isTransition { ^false }
 }
