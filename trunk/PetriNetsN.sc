@@ -185,6 +185,7 @@ PNTransitionN {
 				instList.add( PNPlaceN( aSymbol, tokens ) );
 				i = i + 2;
 			}{
+				// check here if aSymbol is a PNPlaceN or a Symbol
 				instList.add( PNPlaceN( aSymbol ) );
 				i = i + 1;
 			}
