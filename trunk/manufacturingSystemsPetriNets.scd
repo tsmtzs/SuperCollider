@@ -425,3 +425,46 @@ Ndef(\a,{ var env,xn = 4.6, r = 37;
 	]
 }
 )
+
+//////////////////////////////////////////////////////////////////////
+// Workstation from section "A car manufacturing system"
+//////////////////////////////////////////////////////////////////////
+
+(
+~workstation = {| index = 0, loadPlace, loadClock = 1, loadSource, startProcessingClock = 1, startProcessingSource, stopProcessingClock = 1, stopProcessingSource, unloadPlace, unloadClock = 1, unloadSource |
+	[
+		(
+			transition: "load%".format( index ).asSymbol,
+			inputPlaces: [ "fl%".format( index ).asSymbol, 1, loadPlace ],
+			outputPlaces: [ "l%".format( index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: loadClock,
+			source: loadSource
+		),
+		(
+			transition: "startProcessing%".format( index ).asSymbol,
+			inputPlaces: [ "l%", "fp%" ].collect {| string | string.format( index ).asSymbol } ++ [ 1 ],
+			outputPlaces: [ "fl%", "p%" ].collect {| string | string.format( index ).asSymbol },
+			inhibitorPlaces: [],
+			clock: startProcessingClock,
+			source: startProcessingSource
+		),
+		(
+			transition: "stopProcessing%".format( index ).asSymbol,
+			inputPlaces: [ "p%", "fu%" ].collect {| string | string.format( index ).asSymbol } ++ [ 1 ],
+			outputPlaces: [ "fp%", "u%" ].collect {| string | string.format( index ).asSymbol },
+			inhibitorPlaces: [],
+			clock: stopProcessingClock,
+			source: stopProcessingSource
+		),
+		(
+			transition: "unload%".format( index ).asSymbol,
+			inputPlaces: [ "u%".format( index ).asSymbol ],
+			outputPlaces: [ "fu%".format( index ).asSymbol, unloadPlace ],
+			inhibitorPlaces: [],
+			clock: unloadClock,
+			source: unloadSource
+		)
+	]
+}
+)
