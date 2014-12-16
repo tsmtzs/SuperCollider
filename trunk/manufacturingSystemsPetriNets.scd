@@ -468,3 +468,46 @@ Ndef(\a,{ var env,xn = 4.6, r = 37;
 	]
 }
 )
+
+//////////////////////////////////////////////////////////////////////
+// Single kanban cell
+// from Marsan et. "Modelling with generalized stochastic petri nets"
+//////////////////////////////////////////////////////////////////////
+
+(
+~singleKanban = {| index = 0, enterCellPlace, enterCellSource, cards = 1, inMSource, outMClock = 1, outMSource, exitCellPlace, exitCellSource |
+	[
+		(
+			transition: "enterCell%".format( index ).asSymbol,
+			inputPlaces: [ enterCellPlace, "bb%".format( index ).asSymbol, cards ],
+			outputPlaces: [ "ib%".format( index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: 0,
+			source: enterCellSource
+		),
+		(
+			transition: "inM%".format( index ).asSymbol,
+			inputPlaces: [ "ib%", "idleM%" ].collect {| string | string.format( index ).asSymbol } ++ [ 1 ],
+			outputPlaces: [ "busyM%".format( index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: 0,
+			source: inMSource
+		),
+		(
+			transition: "outM%".format( index ).asSymbol,
+			inputPlaces: [ "busyM%".format( index ).asSymbol ],
+			outputPlaces: [ "ob%", "idleM%" ].collect {| string | string.format( index ).asSymbol },
+			clock: outMClock,
+			source: outMSource
+		),
+		(
+			transition: "exitCell%".format( index ).asSymbol,
+			inputPlaces: [ "ob%".format( index ).asSymbol ],
+			outputPlaces: [ exitCellPlace, "bb%".format( index ).asSymbol ],
+			inhibitorPlaces: [],
+			clock: 0,
+			source: exitCellSource
+		)
+	]
+}
+)
