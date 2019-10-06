@@ -1,0 +1,106 @@
+TITLE:: Girgensohn
+summary:: Create Arrays with the values of some popular non diffentiable functions.
+categories:: Collections
+
+DESCRIPTION:: Class CODE::Girgensohn:: is a singleton that can be used to compute CODE::Array:: instances with the values of non differentiable functions over the interval CODE::[0, 1]::. Supported functions are:
+LIST::
+	## the Weierstrass function,
+	## the Takagi function,
+	## the Takacs function,
+	## the Kairies function,
+	## the DeRham function.
+:: 
+
+WARNING::
+Due to the structure of the algorithm, the size of the returned arrays is a power of 2. The TELETYPE::depth:: argument is the exponent of 2. This means that the size of the array is CODE::2.pow(depth)::.
+::
+
+EXAMPLES::
+code::
+~gf = Girgensohn;
+
+// Arrays have size 2^~exp
+~exp = 12;
+
+// Weirstrass function. First argument 'alpha' in [0, 1]
+// Second argument is phase.
+~weierstrass = ~gf.weierstrass(0.5, 0.0, ~exp);
+~weierstrass.plot('Weierstrass');
+
+// Takagi function
+~takagi = ~gf.takagi(~exp);
+~takagi.plot('Takagi');
+
+// Takacs function. First argument 'rho' is positive, not equal to 1.
+~takacs = ~gf.takacs(1.8);
+~takacs.plot('Takacs');
+
+// Kairies function;
+~kairies = ~gf.kairies(~exp);
+~kairies.plot('Kairies');
+
+// DeRham function. First argument 'alpha' in the open interval (0, 1);
+~deRham = ~gf.deRham(0.9, ~exp);
+~deRham.plot('deRham');
+::
+
+Array size not a power of 2.
+CODE::
+(
+var size = 1000, exp = 12, weierstrassSize;
+var weierstrass;
+
+weierstrass = Girgensohn.weierstrass(0.5, 0.0, exp);
+weierstrassSize = weierstrass.size;
+weierstrass.plot('weierstrass');
+
+Array.fill(size, {|i| var x = weierstrassSize - 1 * i / (size - 1) ; weierstrass.blendAt(x)}).plot;
+)
+::
+
+code::
+~gf = Girgensohn;
+
+// Arrays have size 2^~exp
+~exp = 12;
+
+~function = ~gf.weierstrass(0.5, ~exp).normalize(-1.0,1.0).as(Signal).asWavetable;
+// ~function = ~gf.kairies(~exp).normalize(-1.0,1.0).as(Signal).asWavetable;
+
+~buf = Buffer.sendCollection( s, ~function );
+
+({
+	var sig, buf;
+	sig = Osc.ar(~buf, MouseX.kr(50.0, 500), 0, 0.2);
+	Out.ar(0, sig.dup)
+}.play
+)
+::
+
+code::
+~gf = Girgensohn;
+
+~takagi = ~gf.takagi(12);
+~grainBuf = Buffer.sendCollection( s, ~takagi);
+
+(
+Ndef(\grain, {|grainBuf = -1, freq = 4000, density = 20, grainDur=0.02, amp=0.2|
+	var pan, env, freqDev; 
+	var trig = Dust.kr(density);
+
+	pan = LFNoise1.kr(0.07);
+
+	freqDev = LFNoise0.kr(0.1, 1000);
+
+	GrainFM.ar(2, trig, grainDur, freq + freqDev, 200, LFNoise1.kr.range(1, 10),
+            pan, grainBuf) * amp;
+}).play
+)
+
+Ndef(\grain).set(\grainBuf, -1);
+Ndef(\grain).set(\grainBuf, ~grainBuf); // use Takagi function
+
+Ndef(\grain).set(\density, 20);
+Ndef(\grain).set(\grainDur, 0.01);
+Ndef(\grain).set(\freq, 4000);
+::

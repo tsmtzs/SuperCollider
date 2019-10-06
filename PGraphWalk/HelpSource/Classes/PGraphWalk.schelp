@@ -1,0 +1,145 @@
+TITLE:: PGraphWalk
+summary:: A random walk on a graph.
+categories:: patterns
+related:: Pwalk, Pfsm
+
+DESCRIPTION::
+Returns a stream of objects that are embedded from a random walk on a given graph.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+
+ARGUMENT:: transitionMatrix
+A square matrix. The element at position CODE::ij:: is the probability of the transition from vertex CODE::i:: to vertex CODE::j::. Each row sums to 1.
+
+ARGUMENT:: anArray
+An array of size equal to the size of transition matrix. The element at position CODE::i:: corresponds to vertex CODE::i::.
+
+ARGUMENT:: startVertex
+The initial vertex from where the random walk starts. It is a positve integer less than the number of vertices. Default value: 0.
+
+ARGUMENT:: steps
+The length of the returned stream. Default value: inf.
+
+EXAMPLES::
+code::
+(
+var matrix, vertices, walk;
+
+// The walk stops the firts time it hits vertex 2.
+matrix = [ [ 0.4, 0.5, 0.1 ], [ 0.5, 0.4, 0.1 ], [ 0, 0, 0 ] ];
+
+vertices = [ \a, \b, \c ];
+
+walk = PGraphWalk( matrix, vertices, 0 ).asStream;
+
+walk.nextN(20);
+)
+::
+Sound examples:
+code::
+(// The Turan graph T(nk, n)
+~turan = {|n = 3, k = 2|
+	var row;
+	row = (0 ! k) ++ (1 ! (n * k - k));
+	n.collect {|i|
+		row.rotate(i * k)
+	}.stutter(k);
+};
+)
+
+(
+var normalizeRows, freqTransitionMatrix, durTransitionMatrix, ampTransitionMatrix;
+var freqVertices, durVertices, ampVertices;
+var freqStartVertex = 0, durStartVertex = 2, ampStartVertex = 0, a, b, c;
+
+normalizeRows = {|anArray2D | anArray2D.collect {|row| row.normalizeSum}};
+
+freqTransitionMatrix = normalizeRows.(~turan.(4, 2));
+freqVertices = [50, 52, 53, 55] + .x [0, 12];
+
+durTransitionMatrix = normalizeRows.(~turan.(1, 3));
+durVertices = [1/7, 1/8, 1/9];
+
+ampTransitionMatrix = normalizeRows.(~turan.(2, 2));
+ampVertices = [0.08, 0.09, 0.1, 0.3];
+
+a = Pbind(
+	\midinote, PGraphWalk(freqTransitionMatrix, freqVertices, freqStartVertex),
+	\dur, PGraphWalk(durTransitionMatrix, durVertices, durStartVertex),
+	\amp, PGraphWalk(ampTransitionMatrix, ampVertices, ampStartVertex)
+);
+
+b = Pbindf(a, \harmonic, 2);
+c = Pbindf(a, \harmonic, Pseg(Pseq([ 4, 3, Rest()], inf), 24, \step, inf));
+
+Ptpar([0.0, a, 8.0, b, 24.0, c]).play
+)
+::
+
+CODE::
+// Paley graph
+(
+~edgeFunc = {|i|
+		( [1, 3, 4] * .x [1, -1]).collect {|elem|
+			(i+elem).mod(13)
+		};
+};
+
+~paley13 = {
+	Array.fill( 13, {|i|
+	(0 ! 13).putEach(~edgeFunc.(i), 1)
+	})
+}
+)
+
+		
+(//page 326 - from Cottle's book
+SynthDef("SyncSaw-Ex",{|out = 0, freq = 400, amp = 0.1, pan = 0.0|
+		var sig, env;
+		env = EnvGen.kr(
+			Env.linen(Rand(0.5, 4.0), Rand(3.0, 7.0), Rand(2.0, 3.0)),
+			doneAction: 2
+		);
+		sig = SyncSaw.ar(
+			freq, 
+			SinOsc.ar(1/11, 0, mul: freq*0.5, add: freq*2),
+			mul: 0.1);
+		sig = CombL.ar(sig, 0.1, 0.05, 2, 1, sig * 0.9);
+		sig = LPF.ar(sig, LinExp.kr( env*amp, 0, 1, 600, 12000));
+		sig = sig*env; 
+		Out.ar(out, Pan2.ar(sig*0.8, pan, amp))
+	}).add;
+)
+
+(
+var notes, amps, durs, transitionProbs, normalizeRows;
+var voices, startVertices, numberOfVoices = 5;
+
+normalizeRows = {|anArray2D| anArray2D.collect {|row| row.normalizeSum}};
+transitionProbs =  normalizeRows.(~paley13.value);
+
+startVertices = {13.rand} ! numberOfVoices;
+
+notes = [Rest(), 11, 10, 1, 12, 4, 5, 2, 3, 7, 6, 9, 8];
+amps = [0.07, 0.09] ++ [0.07, 0.1, 0.07, 0.15, 0.07, 0.2].mirror * 2;
+durs = [1, 1/2] ++ [1, 1/3, 1, 1/4, 1, 1/6].mirror * 20;
+
+voices = numberOfVoices.collect {|i|
+	Pbind(
+		\instrument, "SyncSaw-Ex",
+		\paley, PGraphWalk(transitionProbs, (..12), startVertices[i]),
+		\note, Pindex(notes, Pkey(\paley)),
+		\dur, Pindex(durs, Pkey(\paley)),
+		\delta, Pkey(\dur) * Pgauss(1.0, 0.5),
+		\amp, Pindex(amps, Pkey(\paley)),
+		\octave, i.linlin(0, numberOfVoices - 1, 2, 7).floor +  Prand((..2), inf),
+		\pan, i.linlin(0, numberOfVoices - 1, -0.5, 0.5)
+	)
+};
+
+Ppar(voices).play;
+)
+::

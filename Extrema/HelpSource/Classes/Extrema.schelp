@@ -1,0 +1,110 @@
+TITLE:: Extrema
+summary:: Collect the relative extrema of a sampled function
+categories:: Collections
+
+DESCRIPTION::
+Let code::anArray:: be an array with the sampled values of a function over an interval. This class computes the relative extrema of the function and collects them in a code::List::.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Create an code::Extrema:: instance for the function whose sampled values are code::anArray::.
+
+ARGUMENT:: anArray
+A code::SequenceableCollection:: with the values of a sampled function.
+
+returns:: An instanse of Extrema.
+
+
+INSTANCEMETHODS::
+
+METHOD:: relativeMinima
+Computes the relative minima of the function.
+
+returns:: A code::List:: with the relative minima.
+
+METHOD:: relativeMinimaPositions
+Computes the positions at which the relative minima occur. Positions are normalized in [0,1] with respect to the size of code::anArray::.
+
+returns:: A code::List:: with the normalized relative minima positions.
+
+METHOD:: relativeMaxima
+Similar to method code::relativeMinima::.
+
+returns:: A code::List:: with the relative maxima.
+
+METHOD:: relativeMaximaPositions
+Similar to method code::relativeMinimaPositions::.
+
+returns:: A code::List:: with the normalized relative maxima positions.
+
+METHOD:: relativeExtrema
+Similar to method code::relativeMinima::.
+
+returns:: A code::List:: with the relative extrema of the sample function.
+
+METHOD:: relativeExtremaPositions
+Similar to method code::relativeMinimaPositions::.
+
+returns:: A code::List:: with the normalized relative extrema positions.
+
+EXAMPLES::
+code::
+(
+Fdef(\func, {|harmonics = 4|
+	var  array;
+	array = Signal.sineFill( 
+		1024, 
+		{(0.1,0.15..1.0).choose} ! harmonics,
+		{(0,0.25..1.0).choose * 2pi} ! harmonics
+	);
+
+	Extrema(array)
+})
+)
+
+(
+var func;
+func = Fdef(\func).value(14);
+Pdefn(\freqs, {
+	var array;
+	array = func.relativeExtrema.array;
+	Pseq(array, inf).linlin(-1, 1, 30, 85).floor.midicps;
+});
+Pdefn(\durs, {
+	var array;
+	array = func.relativeExtremaPositions.array.differentiate;
+	Pseq(array , inf) 
+});
+)
+
+
+(
+p = Pbind(
+	\instrument, \default,
+	\freq, Pdefn(\freqs),
+	\dur, Pdefn(\durs)
+)
+)
+
+p.play
+::
+
+NOTE::
+Relative extrema can be found also in real time. The next example shows a possible scenario.
+code::
+({
+var slope, func, trigger, sig;
+
+func = SinOsc.kr([1, 1.5], {2pi.rand} ! 2).sum;
+slope = Slope.kr(func);
+
+trigger = slope * Delay1.kr(slope);
+
+sig = BrownNoise.ar * EnvGen.kr(Env.perc(0.001, 0.05), trigger);
+
+Pan2.ar(sig, 0.0)
+}.play
+)
+::
