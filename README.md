@@ -22,4 +22,4 @@ Clone repository under the directory `Platform.systemExtensionDir`.
 - **Help improve the code**.
 
 ## License
-<!-- [MIT License](LICENSE) -->
+[GPLv3](LICENSE)
