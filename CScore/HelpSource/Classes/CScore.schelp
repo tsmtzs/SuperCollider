@@ -1,0 +1,91 @@
+TITLE:: CScore
+summary:: A score with timed OSC commands that can be used for real time nodeID allocation.
+categories:: Server>NRT, External Control>OSC
+related:: Classes/Score
+
+DESCRIPTION::
+A subclass of LINK::Classes/Score:: oriented towards real time playing. 
+The list is of the form
+code::
+[
+	[time_1, function_1, aServer],
+			.
+			.
+			.
+	[time_n, function_n, aServer],
+	[endTime, [\c_set, 0, 0], aServer]
+]
+::
+where:
+LIST:: 
+## STRONG::time_i:: is an ascending time sequence,
+## STRONG::function_i:: is a function that returns an OSC message, and
+## STRONG::aServer:: is the server that the OSC msg of function_i will be sent.
+::
+
+WARNING:: Not thoroughly tested.::
+
+EXAMPLES::
+
+code::
+(
+~oscFunc = {| start = 0.0, dur = 60, grainDur = 0.04, dt = 0.04, amp = 0.06 |
+	 var group, synth, time, list = List[], server;
+
+	 time = start;
+	 server = Server.default;
+
+	 group = Group.new( server );
+
+	 list.add( 
+	 	 [
+	 	     start,
+		     { group.newMsg( server, \addToHead ) },
+		     server
+		 ]
+	);
+
+	while(
+		{ time < dur }, 
+			{
+			 list.add( 
+			    	  [
+			  	  	time,
+					{ ( synth = Synth.basicNew( \default, server ) )
+					.newMsg( group, [ \out, 0, \freq, 700.0.rrand( 1000.0 ), \amp, amp, \dur, grainDur, \pan, 0.3.rand2 ], \addToHead ) },
+					server
+				 ]
+			);
+
+			list.add(
+				[
+					time + grainDur,
+					{ synth.releaseMsg },
+					server
+				]
+			);
+
+			time = dt.value + time;
+			};
+	);
+
+	list.asArray
+}
+)
+
+~score = CScore( ~oscFunc.( 0.5, 100, 0.04 ) )
+~score.sort;
+~score.play;
+
+// play something along.
+// It doesn't matter if the ~score or Pdef starts first.
+(
+Pdef(\a,
+	Pbind(
+		\freq, Pfunc { { 100.0.rrand( 400.0 ) } ! 4.rrand(10) },
+		\dur, Pfunc { 2.0.rrand(6.0) },
+		\amp, 0.2
+	)
+).play
+)
+::

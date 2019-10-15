@@ -11,6 +11,9 @@ This package collects my `SuperCollider` classes. These are:
 * `PGraphWalk`  
    A subclass of `Pattern`. Generates a random walk over the vertices of a given graph.
 
+* `CScore`  
+  A subclass of `Score` oriented toward real time playing. Not thoroughly tested.
+
 ## Requirements
 `SuperCollider` version 2.7.2 or greater.
 
