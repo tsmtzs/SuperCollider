@@ -1,6 +1,6 @@
 # *A collection of `SuperCollider` classes*
 ## Overview
-This package collects my `SuperCollider` classes. These are:
+This package collects my `SuperCollider` classes and extensions. These are:
 
 * `Extrema`  
     Given an `Array` instance with the values of a function over an interval, this class computes the positions and values of local extrema. It's methods return `Array` instances with those values.
@@ -12,13 +12,18 @@ This package collects my `SuperCollider` classes. These are:
    A subclass of `Pattern`. Generates a random walk over the vertices of a given graph.
 
 * `CScore`  
-  A subclass of `Score` oriented toward real time playing. Not thoroughly tested.
+  A subclass of `Score` oriented towards real time playing. Not thoroughly tested.
+  
+* `Array.pisano`  
+  A class method that extends `Array`. Let `n` be a positive integer. `pisano` takes `n` as argument and
+  returns an `Array` instance with the *pisano* period of `n`. That is, it collects the period of the 
+  sequence `F_k mod(n)` where `F_k` is the `k-ieth` Fibonacci number.
 
 ## Requirements
 `SuperCollider` version 2.7.2 or greater.
 
 ## Installation
-Clone repository under the directory `Platform.systemExtensionDir`.
+Clone repository under directory `Platform.systemExtensionDir`.
 
 ## Contribute
 - **Use the classes and report issues, errors and bugs**.
