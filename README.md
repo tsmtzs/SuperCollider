@@ -14,6 +14,9 @@ This package collects my `SuperCollider` classes and extensions. These are:
 * `CScore`  
   A subclass of `Score` oriented towards real time playing. Not thoroughly tested.
   
+* `ScoreTimer`  
+  A GUI that shows the current playback time of a given `Score` object that is played in real time.
+
 * `Array.pisano`  
   A class method that extends `Array`. Let `n` be a positive integer. `pisano` takes `n` as argument and
   returns an `Array` instance with the *pisano* period of `n`. That is, it collects the period of the 
