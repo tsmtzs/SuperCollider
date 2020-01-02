@@ -69,7 +69,7 @@ SPNPlace {
 		stream << this.class.name << "( "<< name <<" , " << tokens  << " )";
 	}
 
-// Modify method warning so that it can print or not the message?
+	// Modify method warning so that it can print or not the message?
 	warning {| anObject |
 		if( anObject.isKindOf( Integer ).not ){
 			("\nPlace"+this.name.asString+anObject.asString + "is not an integer").warn 
@@ -134,7 +134,7 @@ SPNImmediateTransition {
 		^super.new
 		.prAdd( key )
 	}
-		
+	
 	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
 		this.inputPlaces_( inputPlaces )
 		.inhibitorPlaces_( inhibitorPlaces )
@@ -203,7 +203,7 @@ SPNImmediateTransition {
 		}
 	}
 
-// modify this method to avoid duplicate writings
+	// modify this method to avoid duplicate writings
 	informPlaces {
 		var instanceName = this.name;
 		this.inputPlaces( false ).do {| place | place.isInputPlaceTo.add( instanceName ) };
@@ -320,10 +320,10 @@ SPetriNet {
 		this.all.clear;
 	}
 
-// Each argument corresponds to one transition and is an IdentityDictionary with keys:
-// \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
-// \inhibitorPlaces: setOfInhibitorPlaces or nil, \updateInputPlaces: aFunction(optional),
-// \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
+	// Each argument corresponds to one transition and is an IdentityDictionary with keys:
+	// \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
+	// \inhibitorPlaces: setOfInhibitorPlaces or nil, \updateInputPlaces: aFunction(optional),
+	// \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
 	*new {| key ... dictionaries |
 		var petriNet;
 		petriNet = this.at( key );
@@ -426,7 +426,7 @@ SPetriNet {
 		.as(Event)
 	}
 
-// delete instance variable 'transitionsB1' ?
+	// delete instance variable 'transitionsB1' ?
 	makeB1 {
 		var transName;
 		unionOfB1 = Set[];
@@ -440,7 +440,7 @@ SPetriNet {
 					{(transition.inputPlaces.as(Set) & trans.inhibitorPlaces.as(Set) ).isEmpty.not} ){ 
 						// transitionsB1.at( transName ).add( trans );
 						unionOfB1.add( trans );
-				};
+					};
 			};
 		};
 		// unionOfB1 = transitionsB1.inject( Set[], _.union( _ ) );//change method with reduce
@@ -548,24 +548,24 @@ SPetriNet {
 					}
 				};
 
-			string = string ++ stateName ++":" + stateValue.asString ++ "\n\t"
+				string = string ++ stateName ++":" + stateValue.asString ++ "\n\t"
 			};
 		};
 		^ string+"\n"
 	}
 
 	samplePathAlgorithm {| dur = 5, startTime = 0, aSelector ...moreArgs |
-	var endTime;
-	endTime = startTime + dur;
+		var endTime;
+		endTime = startTime + dur;
 		unionOfB1 ?? { this.makeB1 }; //maybe remove this line?
-	this.computeInitEnabledTransitions;
+		this.computeInitEnabledTransitions;
 
-	this.prSamplePathsBasic( startTime );
+		this.prSamplePathsBasic( startTime );
 		//	this.prSamplePathsWithPerform( startTime, \value ); // use this line and delete method 'prSamplePathsBasic' ?
 
-	("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
+		("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
 
-	this.prSamplePathsWithPerform( endTime, aSelector, *moreArgs );
+		this.prSamplePathsWithPerform( endTime, aSelector, *moreArgs );
 	}
 
 	prSamplePathsBasic {| endTime |
@@ -668,17 +668,17 @@ SPetriNet {
 	// change the next 3 methods with something better. You want to perform many methods each one
 	// maybe with additional arguments
 	samplePathWithMultiPerform {| dur = 5, startTime = 0 ...selectors |
-	var endTime;
-	endTime = startTime + dur;
+		var endTime;
+		endTime = startTime + dur;
 		unionOfB1 ?? { this.makeB1 }; //maybe remove this line?
-	this.computeInitEnabledTransitions;
+		this.computeInitEnabledTransitions;
 
-	this.prSamplePathsBasic( startTime );
+		this.prSamplePathsBasic( startTime );
 		//	this.prSamplePathsWithPerform( startTime, \value ); // use this line and delete method 'prSamplePathsBasic' ?
 
-	("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
+		("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
 
-	this.prSamplePathsWithMultiPerform( endTime, *selectors );
+		this.prSamplePathsWithMultiPerform( endTime, *selectors );
 	}
 
 
@@ -702,9 +702,9 @@ SPetriNet {
 	////////////////////////////////////////////////////////
 
 	putCurrentStateToFile {| aFile, showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
-	var string;
-	string = this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings,  showHoldingTime);
-	aFile.write( string );
+		var string;
+		string = this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings,  showHoldingTime);
+		aFile.write( string );
 	}
 
 	postCurrentState{ |showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
@@ -719,7 +719,7 @@ SPetriNet {
 			// .collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );
 			^this
 		};
- // maybe remove this line and keep the above without the conditional? Is it faster then?
+		// maybe remove this line and keep the above without the conditional? Is it faster then?
 		timeDurPairs.do {|aList| aList.clear };
 	}
 
@@ -738,14 +738,14 @@ SPetriNet {
 	}
 
 	/*
-	play {| from, to | // modify to select the pattern / s to play
-	}
+		play {| from, to | // modify to select the pattern / s to play
+		}
 
-	writeOSCFile {| path, clock, from, to |
-	}
+		writeOSCFile {| path, clock, from, to |
+		}
 
-	recordNRT {
-	}
+		recordNRT {
+		}
 	*/
 }
 
