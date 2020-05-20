@@ -5,7 +5,7 @@ PGraphWalk : Pattern {
 	var <>transitionMatrix, <>vertices, transitions;
 	var <>startVertex, <>steps, size;
 
-	*new {|transitionMatrix, anArray, startVertex = 0, steps = inf|
+	*new { |transitionMatrix, anArray, startVertex = 0, steps = inf|
 		^super.new
 		.transitionMatrix_(transitionMatrix)
 		.vertices_(anArray)
@@ -20,19 +20,19 @@ PGraphWalk : Pattern {
 		// and the size of vertices array ?
 		size = vertices.size;
 		transitions = Array.newClear(size);
-		transitionMatrix.do {|row, i|
-			vertexTransitions = row.collect {|prob, j|
+		transitionMatrix.do { |row, i|
+			vertexTransitions = row.collect { |prob, j|
 				[j, prob]
-			}.select{ |pair|
+			}.select { |pair|
 				pair[1] != 0			// check also if element is nil?
 			};
-			if (vertexTransitions.notEmpty){transitions.put(i, vertexTransitions.flop);};
-		};
+			if (vertexTransitions.notEmpty) { transitions.put(i, vertexTransitions.flop) };
+		}
 	}
 
 	storeArgs { ^[transitionMatrix, vertices, startVertex, steps]}
 
-	embedInStream {|inval|
+	embedInStream { |inval|
 		var vertex, nextVertices = 0, transitionProbs, repeats;
 
 		repeats = steps.value(inval);

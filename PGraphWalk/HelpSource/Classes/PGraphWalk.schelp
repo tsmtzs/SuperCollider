@@ -29,11 +29,11 @@ code::
 var matrix, vertices, walk;
 
 // The walk stops the firts time it hits vertex 2.
-matrix = [ [ 0.4, 0.5, 0.1 ], [ 0.5, 0.4, 0.1 ], [ 0, 0, 0 ] ];
+matrix = [[ 0.4, 0.5, 0.1 ], [ 0.5, 0.4, 0.1 ], [ 0, 0, 0 ]];
 
-vertices = [ \a, \b, \c ];
+vertices = [\a, \b, \c];
 
-walk = PGraphWalk( matrix, vertices, 0 ).asStream;
+walk = PGraphWalk(matrix, vertices, 0).asStream;
 
 walk.nextN(20);
 )
@@ -41,12 +41,13 @@ walk.nextN(20);
 Sound examples:
 code::
 (// The Turan graph T(nk, n)
-~turan = {|n = 3, k = 2|
+~turan = { |n = 3, k = 2|
 	var row;
 	row = (0 ! k) ++ (1 ! (n * k - k));
-	n.collect {|i|
+	n.collect { |i|
 		row.rotate(i * k)
-	}.stutter(k);
+	}
+	.stutter(k)
 };
 )
 
@@ -55,7 +56,11 @@ var normalizeRows, freqTransitionMatrix, durTransitionMatrix, ampTransitionMatri
 var freqVertices, durVertices, ampVertices;
 var freqStartVertex = 0, durStartVertex = 2, ampStartVertex = 0, a, b, c;
 
-normalizeRows = {|anArray2D | anArray2D.collect {|row| row.normalizeSum}};
+normalizeRows = { |anArray2D |
+	anArray2D.collect { |row|
+		row.normalizeSum
+	}
+};
 
 freqTransitionMatrix = normalizeRows.(~turan.(4, 2));
 freqVertices = [50, 52, 53, 55] + .x [0, 12];
@@ -82,14 +87,14 @@ Ptpar([0.0, a, 8.0, b, 24.0, c]).play
 CODE::
 // Paley graph
 (
-~edgeFunc = {|i|
-		( [1, 3, 4] * .x [1, -1]).collect {|elem|
+~edgeFunc = { |i|
+		( [1, 3, 4] * .x [1, -1]).collect { |elem|
 			(i+elem).mod(13)
-		};
+		}
 };
 
 ~paley13 = {
-	Array.fill( 13, {|i|
+	Array.fill(13, { |i|
 	(0 ! 13).putEach(~edgeFunc.(i), 1)
 	})
 }
@@ -97,7 +102,7 @@ CODE::
 
 		
 (//page 326 - from Cottle's book
-SynthDef("SyncSaw-Ex",{|out = 0, freq = 400, amp = 0.1, pan = 0.0|
+SynthDef("SyncSaw-Ex",{ |out = 0, freq = 400, amp = 0.1, pan = 0.0|
 		var sig, env;
 		env = EnvGen.kr(
 			Env.linen(Rand(0.5, 4.0), Rand(3.0, 7.0), Rand(2.0, 3.0)),
@@ -111,23 +116,25 @@ SynthDef("SyncSaw-Ex",{|out = 0, freq = 400, amp = 0.1, pan = 0.0|
 		sig = LPF.ar(sig, LinExp.kr( env*amp, 0, 1, 600, 12000));
 		sig = sig*env; 
 		Out.ar(out, Pan2.ar(sig*0.8, pan, amp))
-	}).add;
+}).add;
 )
 
 (
 var notes, amps, durs, transitionProbs, normalizeRows;
 var voices, startVertices, numberOfVoices = 5;
 
-normalizeRows = {|anArray2D| anArray2D.collect {|row| row.normalizeSum}};
+normalizeRows = { |anArray2D|
+	anArray2D.collect { |row| row.normalizeSum }
+};
 transitionProbs =  normalizeRows.(~paley13.value);
 
-startVertices = {13.rand} ! numberOfVoices;
+startVertices = { 13.rand } ! numberOfVoices;
 
 notes = [Rest(), 11, 10, 1, 12, 4, 5, 2, 3, 7, 6, 9, 8];
 amps = [0.07, 0.09] ++ [0.07, 0.1, 0.07, 0.15, 0.07, 0.2].mirror * 2;
 durs = [1, 1/2] ++ [1, 1/3, 1, 1/4, 1, 1/6].mirror * 20;
 
-voices = numberOfVoices.collect {|i|
+voices = numberOfVoices.collect { |i|
 	Pbind(
 		\instrument, "SyncSaw-Ex",
 		\paley, PGraphWalk(transitionProbs, (..12), startVertices[i]),

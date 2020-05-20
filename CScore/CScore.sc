@@ -18,21 +18,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 CScore : Score {
 	// a problem here if list is nil
-	init {|list|
+	init { |list|
 		var servers;
-		servers = list.collect {|cmd| cmd[2]}.asSet;
-		servers.do {|aServer|
-			score = score.add( 
+		servers = list.collect { |cmd| cmd[2] }.asSet;
+		servers.do { |aServer|
+			score = score.add(
 				[0.0, ["/g_new", 1, 0, 0], aServer]
 			);
 		};
 		score =  score ++ list;
-		this.sort;
+		this.sort
 	}
 
 	// the osc bundle from score is of the form
 	// [time, aFunction, aServer]
-	play { arg server, clock, quant=0.0;
+	play { |server, clock, quant=0.0|
 		var size, osccmd, timekeep, inserver, rout;
 		isPlaying.not.if({
 			size = score.size;
@@ -42,11 +42,11 @@ CScore : Score {
 					var deltatime, msg;
 					osccmd = score[i];
 					deltatime = osccmd[0];
-					inserver = server ?? {osccmd[2]} ?? {Server.default};
+					inserver = server ?? { osccmd[2] } ?? { Server.default };
 					msg = osccmd[1].value;
 					(deltatime-timekeep).wait;
 					// look again the next line. Does it work in all cases?
-					inserver.sendBundle( inserver.latency, msg );
+					inserver.sendBundle(inserver.latency, msg);
 					timekeep = deltatime;
 				};
 				isPlaying = false;
@@ -54,11 +54,11 @@ CScore : Score {
 			isPlaying = true;
 			this.changed(\play, clock);
 			routine.play(clock, quant);
-		}, {"Score already playing".warn;}
-		);
+		}, { "Score already playing".warn; }
+		)
 	}
 
-	*write { arg list, oscFilePath, clock;
+	*write { |list, oscFilePath, clock|
 		var osccmd, f, tempoFactor;
 		f = File(oscFilePath, "w");
 		tempoFactor = (clock ? TempoClock.default).tempo.reciprocal;

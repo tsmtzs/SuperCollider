@@ -52,12 +52,12 @@ returns:: A code::List:: with the normalized relative extrema positions.
 EXAMPLES::
 code::
 (
-Fdef(\func, {|harmonics = 4|
+Fdef(\func, { |harmonics = 4|
 	var  array;
 	array = Signal.sineFill( 
 		1024, 
-		{(0.1,0.15..1.0).choose} ! harmonics,
-		{(0,0.25..1.0).choose * 2pi} ! harmonics
+		{ (0.1,0.15..1.0).choose } ! harmonics,
+		{ (0,0.25..1.0).choose * 2pi } ! harmonics
 	);
 
 	Extrema(array)

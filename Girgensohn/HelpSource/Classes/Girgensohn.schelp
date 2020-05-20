@@ -54,7 +54,10 @@ weierstrass = Girgensohn.weierstrass(0.5, 0.0, exp);
 weierstrassSize = weierstrass.size;
 weierstrass.plot('weierstrass');
 
-Array.fill(size, {|i| var x = weierstrassSize - 1 * i / (size - 1) ; weierstrass.blendAt(x)}).plot;
+Array.fill(size, { |i|
+	var x = weierstrassSize - 1 * i / (size - 1);
+	weierstrass.blendAt(x)
+}).plot;
 )
 ::
 

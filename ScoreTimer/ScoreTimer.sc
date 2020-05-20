@@ -7,21 +7,21 @@ ScoreTimer {
 	var <score, <duration, <>timeStep = 0.05, time;
 	var window, routine, durText;
 
-	*new {|aScore|
-		^ super.newCopyArgs(aScore).init
+	*new { |aScore|
+		^super.newCopyArgs(aScore).init
 	}
 
-	init {|aScore|
+	init { |aScore|
 		score.addDependant(this);
 		duration = score.score.last[0];
 
 		time = 0.0;
 
-		if(window.isNil){
-			window = Window( 
-				"ScoreTimer", 
+		if (window.isNil) {
+			window = Window(
+				"ScoreTimer",
 				Rect(Window.screenBounds.right - 380, Window.screenBounds.bottom - 180, 350, 150), 
-				false 
+				false
 			).alpha_(0.7).background_(Color.grey(0.7));
 
 			StaticText(window, Rect(10, 30, 115, 30))
@@ -43,18 +43,18 @@ ScoreTimer {
 			};
 
 			routine = Routine {
-				{time < duration}.while {
+				{ time < duration }.while {
 					time = time + timeStep;
-					defer {window.refresh};
-					timeStep.wait;
-				};
+					defer { window.refresh };
+					timeStep.wait
+				}
 			}
 		};
 
-		durText.string_(duration.asTimeString(0.001));
+		durText.string_(duration.asTimeString(0.001))
 	}
 
-	score_ {|aScore|
+	score_ { |aScore|
 		score.removeDependant(this);
 		score = aScore;
 		time = 0.0;
@@ -67,34 +67,33 @@ ScoreTimer {
 		window.refresh;
 	}
 
-	// Different tempi for  score.play work only 
+	// Different tempi for  score.play work only
 	// if TempoClock.default is used
-	// play { 	
+	// play {
 	// 	this.zeroTimer;
 	// 	routine.reset.play
 	// }
-	// stop { 
+	// stop {
 	// 	routine.stop;
-	// 	this.zeroTimer 
+	// 	this.zeroTimer
 	// }
 
-	// *play {|aScore|
+	// *play { |aScore|
 	// 	^this.new(aScore).play
 	// }
 
-	update {|aScore, what, aTempoClock|
-		switch( what,
-			\play, { 
+	update { |aScore, what, aTempoClock|
+		switch (what)
+			{ \play } {
 				// routine.clock_( aTempoClock.debug("tempoClock") ?? { TempoClock.default } );
-				// this.play 
+				// this.play
 				this.zeroTimer;
-				routine.reset.play(clock: (aTempoClock ?? {TempoClock.default}))
-			},
-			\stop, { 
-				routine.stop;
-				this.zeroTimer 
-				// this.stop 
+				routine.reset.play(clock: (aTempoClock ?? { TempoClock.default }))
 			}
-		)
+			{ \stop } {
+				routine.stop;
+				this.zeroTimer
+				// this.stop
+			}
 	}
 }
