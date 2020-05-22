@@ -83,3 +83,5 @@ Pdef(\a,
 ).play
 )
 ::
+
+NOTE:: In cases like the above example, it is better to use two server instances.
