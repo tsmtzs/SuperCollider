@@ -1,0 +1,40 @@
+TITLE:: MultiPortNetAddr
+summary:: Send OSC messages to applications that share the same IP address but listen on different ports.
+categories:: Control, External Control>OSC
+related:: Classes/NetAddr
+
+DESCRIPTION::
+This class can be used to send the same OSC message to applications that share the same IP address but listen on different ports. A possible scenario might be when data from SuperCollider must be sent to a web application. This application utilizes a multicore system where several instances of the web server are running at the same time on different cores. In this setting, web servers share the same IP address but listen on different ports. CODE::MultiPortNetAddr:: internally instantiates one LINK::Classes/NetAddr:: for each port.
+
+CLASSMETHODS::
+
+METHOD:: new
+
+ARGUMENT:: addr
+A CODE::String::. As in LINK::Classes/NetAddr::, this might be an IP number or a hostname.
+
+ARGUMENT:: portArray
+An array of port numbers.
+
+INSTANCEMETHODS::
+
+METHOD:: sendMsg
+Convert the argument list to an OSC message and send it to all listening applications.
+
+CODE::
+// Send messages internally, to applications that listen on ports 50000, 50001, 50002, 50003.
+~webServerListeners = MultiPortNetAddr("127.0.0.1", 50000 + (...3));
+
+~webServerListeners.sendMsg('/start');
+~webServerListeners.sendMsg('/randomFreq', "minFreq", 1000.0, "maxFreq", 1050.0, "minAmp", 0.1, "maxAmp", 0.2, "dur", 100);
+~webServerListeners.sendMsg('/vibrato', "deviation", 10, "rate", 0.5);
+~webServerListeners.sendMsg('/fadeout', "dur", 10);
+~webServerListeners.sendMsg('/end');
+::
+
+METHOD:: isConnected
+
+RETURNS:: A LINK::Classes/Boolean::. This value is CODE::True:: when all the underlying LINK::NetAddress::es are connected and CODE::False:: otherwise.
+
+METHOD:: disconnect
+Disconnect all the underlying LINK::NetAddress::es.
