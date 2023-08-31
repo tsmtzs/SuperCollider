@@ -32,7 +32,7 @@ a.setMarking( (\p1:1, \p2:0, \p3: 0)  )
 
 (
 a.removeUniqueMethod( \show );
-a.addUniqueMethod( \show, 
+a.addUniqueMethod( \show,
 	{| net |
 		Post<<net.perform( \currentStateAsString, showClockReadings:true, showMarking:true );
 		net
@@ -91,7 +91,7 @@ a.samplePathAlgorithm(15, 5.6, \postCurrentState )
 (
 [ SPetriNet, SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn, 
+a = SPetriNet(\spn,
 	(
 		\transition: \t1,
 		\inputPlaces: [\p2],
@@ -114,25 +114,25 @@ m = SPNMediator( \sound );
 
 ~t1 = SPNImmediateTransition.at(\t1);
 ~t1.spnMediator_( m );
-~t1.addDependant(\sound , Pdef2(\t1, Pbind(\freq, 300, \dur, 1.0 ) ) );
+~t1.addDependant(\sound , Pdef(\t1, Pbind(\freq, 300, \dur, 1.0 ) ) );
 // ~t1.dependants.at(\sound).source = Pbind(\freq, 250, \dur, 0.5 );
 // ~t1.clock_({ 2.0 } );
 
 ~t2 = SPNImmediateTransition.at(\t2);
 ~t2.spnMediator_( m );
-~t2.addDependant(\sound , 
-	Pdef2(\t2, 
+~t2.addDependant(\sound ,
+	Pdef(\t2,
 		Pbind(
-			\freq, Pwhite( 300, 600, inf ), 
+			\freq, Pwhite( 300, 600, inf ),
 			\dur, 0.1,
 			\legato, 0.4
-		) 
-	) 
+		)
+	)
 );
 // ~t2.clock_( { 1.15 } );
 )
 
-// if you dont run the next line, some Events from Pdef2 
+// if you dont run the next line, some Events from Pdef
 // might not be played.
 Pdef.all.do {|pdef| pdef.quant = 0; /* pdef.fadeTime = 0 */ }
 
@@ -152,7 +152,7 @@ a.reset
 (
 [ SPetriNet, SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn, 
+a = SPetriNet(\spn,
 	(
 		\transition: \t1,
 		\inputPlaces: [\p11],
@@ -189,20 +189,20 @@ m = SPNMediator( \sound );
 
 ~t1 = SPNImmediateTransition.at(\t1);
 ~t1.spnMediator_( m );
-~t1.addDependant(\sound , Pdef2(\t1, Pbind(\freq, 300, \dur, 10.0 ) ) );
+~t1.addDependant(\sound , Pdef(\t1, Pbind(\freq, 300, \dur, 10.0 ) ) );
 // ~t1.dependants.at(\sound).source = Pbind(\freq, 250, \dur, 0.5 );
 // ~t1.clock_({ 2.0 } );
 
 ~t2 = SPNImmediateTransition.at(\t2);
 ~t2.spnMediator_( m );
-~t2.addDependant(\sound , 
-	Pdef2(\t2, 
+~t2.addDependant(\sound ,
+	Pdef(\t2,
 		Pbind(
-			\freq, Pwhite( 600, 800, inf ), 
+			\freq, Pwhite( 600, 800, inf ),
 			\dur, 0.25,
 			\legato, 0.4
-		) 
-	) 
+		)
+	)
 );
 // ~t2.clock_( { 1.15 } );
 
@@ -211,7 +211,7 @@ m = SPNMediator( \sound );
 
 ~t4 = SPNImmediateTransition.at(\t4);
 ~t4.spnMediator_( m );
-~t4.addDependant(\sound, Pdef2(\t4, Pbind( \freq, 500, \dur, 0.1, \amp, 0.7)));
+~t4.addDependant(\sound, Pdef(\t4, Pbind( \freq, 500, \dur, 0.1, \amp, 0.7)));
 )
 
 // RUN the next line
@@ -219,7 +219,7 @@ Pdef.all.do {|pdef| pdef.quant = 0; }
 
 a.makeB1
 (
-a.setMarking( 
+a.setMarking(
 	a.marking.keysValuesChange({| key, value |
 		value = if( key == \p3 ){ 1 }{ 0 };
 	})
@@ -242,10 +242,10 @@ a.reset
 SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x0 = 110.02, r0 = 1000.40, gate = 1 |
 	var env, xn, r = 0;
 	xn = SinOsc.ar( r0 * x0 ) ;
-	r = SinOsc.ar( coef1 * r0 * xn.abs.sqrt, 0, coef2 ); 
+	r = SinOsc.ar( coef1 * r0 * xn.abs.sqrt, 0, coef2 );
 	2.do({
 		xn = SinOsc.ar(r*xn) ;
-		r = SinOsc.ar( coef1 *r * xn.abs.sqrt, 0, coef2 ); 
+		r = SinOsc.ar( coef1 *r * xn.abs.sqrt, 0, coef2 );
 	});
 
 	env  = EnvGen.kr( Env.cutoff( 1 ) , gate, doneAction: 2 );
@@ -265,7 +265,7 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 (
 [ SPetriNet, SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn, 
+a = SPetriNet(\spn,
 	(
 		\transition: \t1,
 		\inputPlaces: [\p1],
@@ -363,7 +363,7 @@ a.prTask;
 )
 
 (
-a.setMarking( 
+a.setMarking(
 	a.marking.keysValuesChange({| key, value |
 		value = if( key == \p1 ){ 1 }{ 0 };
 	})
@@ -387,7 +387,7 @@ Pdef.all.do {|pdef| pdef.quant = 0; }
 	outputPlaces.choose.addOneToken
 };
 
-Pdef2(\p1,{
+Pdef(\p1,{
 	var repeats;
 	repeats = 1.rrand(7);
 	Pbind(
@@ -399,7 +399,7 @@ Pdef2(\p1,{
 }
 );
 
-Pdef2(\p2,{
+Pdef(\p2,{
 	var notes, durs;
 	notes = [4,5,4,2,-2,-3,7,5,4].scramble;
 	durs = ( [1/4,1/12] ++ ((1/6)!7) ).scramble;
@@ -413,7 +413,7 @@ Pdef2(\p2,{
 }
 );
 
-//  Pdef2(\p2,
+//  Pdef(\p2,
 // 	Pbind(
 // 		\note, Pseq([4,5,4,2,-2,-3,7,5,4],1),
 // 		\dur, 2*Pseq([1/4,1/12] ++ ((1/6)!7), 1),
@@ -423,7 +423,7 @@ Pdef2(\p2,{
 // 	)
 // );
 
-Pdef2(\p3,{
+Pdef(\p3,{
 	var durs, size;
 	durs = [ [ rrand( 8, 10 ), 0.8,7/10], [ rrand( 8, 12),0.1,10/7] ].collect{ |i| Array.geom( *i ) }.flatten;
 	size = durs.size;
@@ -435,7 +435,7 @@ Pdef2(\p3,{
 	)
 });
 
-// Pdef2(\p3,{
+// Pdef(\p3,{
 // 	var durs, size;
 // 	durs = [ [10,0.8,7/10], [8,0.1,10/7] ].collect{ |i| Array.geom( *i ) }.flatten;
 // 	size = durs.size;
@@ -447,7 +447,7 @@ Pdef2(\p3,{
 // 	)
 // });
 
-Pdef2(\p4,{
+Pdef(\p4,{
 	var notes;
 	notes = [ [-1,1,8], [ -5,-1,1,8], [-9,-5,-1,1,8], [-13,-9,-8,-5,-1,1,8] ].choose;
 	Pbind(
@@ -458,7 +458,7 @@ Pdef2(\p4,{
 	)
 });
 
-Pdef2( \left, 
+Pdef( \left,
 	Pbind(
 		\note, Pseq( [2,7,9,17], inf ),
 		\dur, 0.25,
@@ -503,7 +503,7 @@ a = SPetriNet(\spn,
 		\outputPlaces: [\p6],
 		\inhibitorPlaces: [],
 		\dependants:(
-			\sound: Pdef2(\p1)
+			\sound: Pdef(\p1)
 		),
 		\clock: { 2.0.rrand(10.0) }
 	),
@@ -513,7 +513,7 @@ a = SPetriNet(\spn,
 		\outputPlaces: [\p6],
 		\inhibitorPlaces: [],
 		\dependants: (
-			\sound: Pdef2(\p2)
+			\sound: Pdef(\p2)
 		),
 		\clock: { 1.5.rrand(15.0) }
 	),
@@ -523,7 +523,7 @@ a = SPetriNet(\spn,
 		\outputPlaces: [\p6],
 		\inhibitorPlaces: [],
 		\dependants: (
-			\sound: Pdef2(\p3)
+			\sound: Pdef(\p3)
 		),
 		\clock: { 1.5.rrand(10.0) }
 	),
@@ -533,7 +533,7 @@ a = SPetriNet(\spn,
 		\outputPlaces: [\p6],
 		\inhibitorPlaces: [],
 		\dependants: (
-			\sound: Pdef2(\p4)
+			\sound: Pdef(\p4)
 		),
 		\clock: { 0.2.rrand(10.0) }
 	),
@@ -545,7 +545,7 @@ a = SPetriNet(\spn,
 		\inhibitorPlaces: [],
 		\clock: { inf },
 		\dependants: (
-			\sound: Pdef2(\left)
+			\sound: Pdef(\left)
 		)
 	)
 );
@@ -558,7 +558,7 @@ a.makeB1;
 a.prTask;
 
 (
-a.setMarking( 
+a.setMarking(
 	a.marking.keysValuesChange({| key, value |
 		value = if( key == \p0 ){ 1 }{ 0 };
 	})
@@ -578,10 +578,10 @@ a.reset
 SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x0 = 110.02, r0 = 1000.40, gate = 1 |
 	var env, xn, r = 0;
 	xn = SinOsc.ar( r0 * x0 ) ;
-	r = SinOsc.ar( coef1 * r0 * xn.abs.sqrt, 0, coef2 ); 
+	r = SinOsc.ar( coef1 * r0 * xn.abs.sqrt, 0, coef2 );
 	2.do({
 		xn = SinOsc.ar(r*xn) ;
-		r = SinOsc.ar( coef1 *r * xn.abs.sqrt, 0, coef2 ); 
+		r = SinOsc.ar( coef1 *r * xn.abs.sqrt, 0, coef2 );
 	});
 
 	env  = EnvGen.kr( Env.cutoff( 1 ) , gate, doneAction: 2 );
@@ -716,7 +716,7 @@ a.prTask;
 )
 
 (
-a.setMarking( 
+a.setMarking(
 	a.marking.keysValuesChange({| key, value |
 		value = if( key == \p0 ){ 1 }{ 0 };
 	})
@@ -817,23 +817,23 @@ a.reset;
 
 a = SPetriNet(\kan,
 	*(
-		~kanbanCell.( 0, 4, \p0, \p1, { 1.0 }, 
+		~kanbanCell.( 0, 4, \p0, \p1, { 1.0 },
 			( \sound: ( \instrument: \default, \midinote: 60.rrand( 80 ), \amp: 0.2, \pan: 1.0.rand2, \dur: ~dur ) )
 		)
 		++
-		~kanbanCell.( 1, 2, \p1, \p2, { 1.0 }, 
+		~kanbanCell.( 1, 2, \p1, \p2, { 1.0 },
 			( \sound: ( \instrument: \default, \midinote: 60.rrand( 80 ), \amp: 0.2, \pan: 1.0.rand2, \dur: ~dur ) )
 		)
 		++
-		~kanbanCell.( 2, 3, \p2, \p3, { 1.0 }, 
+		~kanbanCell.( 2, 3, \p2, \p3, { 1.0 },
 			( \sound: ( \instrument: \default, \midinote: 60.rrand( 80 ), \amp: 0.2, \pan: 1.0.rand2, \dur: ~dur ) )
 		)
 		++
-		~kanbanCell.( 3, 1, \p3, \p4, { 1.0 }, 
+		~kanbanCell.( 3, 1, \p3, \p4, { 1.0 },
 			( \sound: ( \instrument: \default, \midinote: 60.rrand( 80 ), \amp: 0.2, \pan: 1.0.rand2, \dur: ~dur ) )
 		)
 		++
-		~kanbanCell.( 4, 4, \p4, \p0, { 1.0 }, 
+		~kanbanCell.( 4, 4, \p4, \p0, { 1.0 },
 			( \sound: ( \instrument: \default, \midinote: 60.rrand( 80 ), \amp: 0.2, \pan: 1.0.rand2, \dur: ~dur ) )
 		)
 	)
@@ -877,15 +877,15 @@ a.stop;
 
 a = SPetriNet(\kan,
 	* ~kanbans.collect {|i|
-		~kanbanCell.( 
-			i, 
-			1, 
-			( \p ++ i ).asSymbol, 
-			if( i == (~kanbans - 1) ){ \p0 }{ ( \p ++ (i+1) ).asSymbol }, 
-			{ 0.05 }, 
+		~kanbanCell.(
+			i,
+			1,
+			( \p ++ i ).asSymbol,
+			if( i == (~kanbans - 1) ){ \p0 }{ ( \p ++ (i+1) ).asSymbol },
+			{ 0.05 },
 			( \sound: ( \instrument: \default, \midinote: 50.rrand(100), \amp: 0.1.rrand(0.2), \pan: 1.0.rand2, \dur: ~dur ) )
 		)
-	}.reduce('++')		
+	}.reduce('++')
 );
 
 a.mediator_( SPNMediator( \sound ) );
@@ -922,7 +922,7 @@ a.stop;
 (
 [ SPetriNet, SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn, 
+a = SPetriNet(\spn,
 	(
 		\transition: \t1,
 		\inputPlaces: [\p0],
@@ -996,7 +996,7 @@ a.prTask;
 )
 
 (
-a.setMarking( 
+a.setMarking(
 	a.marking.keysValuesChange({| key, value |
 		value = if( key == \p0 ){ 1 }{ 0 };
 	})

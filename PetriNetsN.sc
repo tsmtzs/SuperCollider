@@ -43,7 +43,7 @@ PNPlaceN {
 		tokens = tokens + anInteger;
 	}
 
-	removeTokens { | anInteger | 
+	removeTokens { | anInteger |
 		// this.warn( anInteger );
 		// tokens = tokens - anInteger;
 		this.addTokens( -1 * anInteger );
@@ -60,7 +60,7 @@ PNPlaceN {
 // Modify method warning so that it can print or not the message?
 	warn {| anObject |
 		if( anObject.isKindOf( Integer ).not ){
-			("\nThe number" + anObject.asString + "is not an integer").warn 
+			("\nThe number" + anObject.asString + "is not an integer").warn
 		};
 	}
 
@@ -70,7 +70,7 @@ PNPlaceN {
 
 // look again instance method 'pnEnvironment'
 // discriminate between places and transitions?
-// if a place and a transition have the same name, one is ovewriten
+// if a place and a transition have the same name, one is ovewritten
 // OR
 // don't store pnEnvironment in each instance. Just pass it over so that an instance
 // can register in the Environment
@@ -88,11 +88,11 @@ PNTransitionN {
 		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
 			//transition is enabled when all input places contain at least one token
-			//and all inhibitor places contain no tokens. The message asCollection added 
+			//and all inhibitor places contain no tokens. The message asCollection added
 			//to prevent nil sets of places
 			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.every({| elem | elem == true })
 			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.every({| elem | elem == true }) // if tokens is positive integer
-			and: 
+			and:
 			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.every({| elem | elem  == true }) }
 		};
 	}
@@ -130,12 +130,12 @@ PNTransitionN {
 
 
 	store { all.put( name, this ) }
-	
+
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
 		.outputPlaces_( outputPlaces )
 		.inhibitorPlaces_( inhibitorPlaces )
-		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) } ) 
+		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) } )
 		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
 		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } );
 	}
@@ -160,7 +160,7 @@ PNTransitionN {
 
 	// prCollectPlaceInstances {| aCollection |
 	// 	var place;
-	// 	^ aCollection.collect {| elem | 
+	// 	^ aCollection.collect {| elem |
 	// 		if( elem.isKindOf( Symbol ) ){ // modify to pass tokens after name e.x [ \p0, 10, \p1, \p2]
 	// 			place = PNPlaceN.at( elem );
 	// 			if( place.isNil ){ place = PNPlaceN( elem ); };
@@ -177,7 +177,7 @@ PNTransitionN {
 		var instList;
 		instList = List[];
 		size = aCollection.size;
-		while { 
+		while {
 			i < size
 		}{
 			# aSymbol, tokens = aCollection.copyRange( i, i + 1 );
@@ -257,14 +257,14 @@ PNTimedTransitionN : PNTransitionN {
 	isTimed { ^true }
 
 	// asSimplePN {| aSymbol |
-	// 	aSymbol ?? { 
-	// 		all.removeAt( name ); 
+	// 	aSymbol ?? {
+	// 		all.removeAt( name );
 	// 	};
 	// 	^ PNTransitionN( name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source )
 	// }
 }
 
-// PetriNetN as a subclass of Environment. It stores every node 
+// PetriNetN as a subclass of Environment. It stores every node
 // as a key with the given name and sets its value to the corresponding object ( place - transition ).
 // Thus, places and transitions must have unique names.
 PetriNetN : Environment {
@@ -289,7 +289,7 @@ PetriNetN : Environment {
 		}{
 			[ PNTransitionN, \simple ];
 		};
-	
+
 		dictionaries.do {| aDict |
 			this.prAddTransition( aDict, className );
 		};
@@ -334,10 +334,10 @@ PetriNetN : Environment {
 	}
 
 	sources {
-		^Event.newFrom( 
-			this.transitions.collect {| val | 
-				[ val.name, val.source ] 
-			}.flat 
+		^Event.newFrom(
+			this.transitions.collect {| val |
+				[ val.name, val.source ]
+			}.flat
 		)
 	}
 
@@ -414,7 +414,7 @@ PNSamplePath {
 
 	init {
 		petriNet.keysValuesDo {| key, val |
-			if( val.isTransition ){ 
+			if( val.isTransition ){
 				transitions = transitions.add( key );
 			};
 		};
@@ -430,10 +430,10 @@ PNSamplePath {
 			unionOfB1.clear;
 			unionOfB1.add( transition );
 			transitions.do {| trans |
-				if( 
-					( petriNet.outputPlacesOf( transition ).as(Set) & petriNet.inputPlacesOf( trans ).as(Set) ).notEmpty 
-					or: 
-					{ ( petriNet.inputPlacesOf( transition ).as(Set) & petriNet.inhibitorPlacesOf( trans ).as(Set) ).notEmpty } ){ 
+				if(
+					( petriNet.outputPlacesOf( transition ).as(Set) & petriNet.inputPlacesOf( trans ).as(Set) ).notEmpty
+					or:
+					{ ( petriNet.inputPlacesOf( transition ).as(Set) & petriNet.inhibitorPlacesOf( trans ).as(Set) ).notEmpty } ){
 						unionOfB1.add( trans );
 					};
 			};
@@ -464,7 +464,7 @@ SimpleSamplePath : PNSamplePath {
 		.values.flat.asSet;
 		enabledTransitions.clear;
 		candidateTrans.do {| aSymbol |
-			if( petriNet.at( aSymbol ).isEnabled ){ 
+			if( petriNet.at( aSymbol ).isEnabled ){
 				enabledTransitions.add( aSymbol );
 			}
 		};
@@ -473,7 +473,7 @@ SimpleSamplePath : PNSamplePath {
 	generateNewMarking {
 		enabledTransitions.do {| aSymbol | petriNet.at( aSymbol ).fire( petriNet ); }
 	}
-	//end of algorithm	
+	//end of algorithm
 }
 
 TimedSamplePath : PNSamplePath {
@@ -490,7 +490,7 @@ TimedSamplePath : PNSamplePath {
 		oldTransitions = Set[];
 		transitions.do {| aSymbol |
 			trans = petriNet[ aSymbol ];
-			if( trans.isEnabled ){ 
+			if( trans.isEnabled ){
 				enabledTransitions.add( aSymbol );
 				trans.clockReading = trans.clock.value( petriNet );
 			}{
@@ -501,13 +501,13 @@ TimedSamplePath : PNSamplePath {
 	}
 	//step 2:
 	computeFiringTransitions {
-		if( enabledTransitions.isEmpty ){ 
+		if( enabledTransitions.isEmpty ){
 			// maybe return nil so that the PNPattern stop?
 			"There are no enabled transitions in petri net. The routine stops.".inform;
 			thisThread.stop;
 		};
-		holdingTime = enabledTransitions.collect{| aSymbol | 
-			petriNet[ aSymbol ].clockReading 
+		holdingTime = enabledTransitions.collect{| aSymbol |
+			petriNet[ aSymbol ].clockReading
 		}.minItem;
 		firingTransitions = enabledTransitions.select {| aSymbol |
 			// petriNet[ aSymbol ].clockReading == holdingTime;
@@ -520,8 +520,8 @@ TimedSamplePath : PNSamplePath {
 	}
 	//step 4:
 	generateNewMarking {
-		firingTransitions.do {| aSymbol | 
-			petriNet[ aSymbol ].fire( petriNet ); 
+		firingTransitions.do {| aSymbol |
+			petriNet[ aSymbol ].fire( petriNet );
 		}
 	}
 	//step 5:
@@ -581,8 +581,8 @@ PNPatternN : Pattern {
 
 		if( sources.notNil ){ net.setSources( sources ) };
 
-		streamDict = net.transitions.collect {| trans | 
-			[ trans.name, trans.source.asStream ] 
+		streamDict = net.transitions.collect {| trans |
+			[ trans.name, trans.source.asStream ]
 		}.flatten.as( Event );
 
 		if( marking.notNil ){ net.setMarking( marking ) };
@@ -620,7 +620,7 @@ PNEventPattern : Pattern {
 		^ PNEventStreamPlayer( this.asStream, protoEvent ).play( clock, true, quant );
 	}
 
-	// for debuging 
+	// for debuging
 	// embedInStream {| inevent |
 	// 	var samplePath, transitions, streamDict, net, ev;
 	// 	var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType;
@@ -710,7 +710,7 @@ PNEventPattern : Pattern {
 					ev = ev.next( inevent ) ?? { ( type: \rest ) };
 					ev[ \delta ] = if( i == ( size - 1 ) ){
 						samplePath.holdingTime
-					}{ 
+					}{
 						0
 					};
 
@@ -727,7 +727,7 @@ PNEventPattern : Pattern {
 				this.prAddEndStream( ev, cleanupEvents );
 				inevent = ev.yield;
 			};
-			
+
 			samplePath.generateNewMarking
 			.computeOldTransitions
 			.computeNewTransitions
@@ -763,7 +763,7 @@ PNEventPattern : Pattern {
 		var player;
 		^ScoreStreamPlayer.new
 		.makeScoreWithEnding( this.asStream, duration, protoEvent, timeOffset, releaseTime );
-	}		
+	}
 }
 
 PNEventStreamPlayer : EventStreamPlayer {
@@ -805,7 +805,7 @@ PNPostState {
 		^ super.newCopyArgs( petriNet ).init;
 	}
 
-	init { 
+	init {
 		samplePath = TimedSamplePath( net ) ;
 		routine = this.prRoutine;
 	}
