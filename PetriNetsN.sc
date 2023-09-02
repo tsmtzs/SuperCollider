@@ -36,7 +36,7 @@ PNPlaceN {
 
 	addOneToken { tokens = tokens + 1 }
 
-	removeOneToken { tokens = tokens - 1 }//allow negative number of tokens
+	removeOneToken { tokens = 0.max(tokens - 1) }
 
 	addTokens { | anInteger |
 		this.warn( anInteger );
