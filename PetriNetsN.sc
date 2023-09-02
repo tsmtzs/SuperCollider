@@ -598,10 +598,10 @@ PNPatternN : Pattern {
 
 			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
 
-			inval = inval.yield;
-
 			samplePath.generateNewMarking
 			.computeEnabledTransitions;
+
+			inval = inval.yield;
 			};
 		^inval
 	}
