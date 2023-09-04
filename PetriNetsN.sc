@@ -566,7 +566,7 @@ TimedSamplePath : PNSamplePath {
 }
 
 PNPatternN : Pattern {
-	var petriNet, marking, length, sources, samplePath;
+	var <petriNet, marking, length, sources, samplePath;
 
 	*new {| aPetriNet, marking, length = inf, sources |
 		^ super.newCopyArgs( aPetriNet, marking, length, sources )
@@ -593,7 +593,7 @@ PNPatternN : Pattern {
 
 		length.value.do {
 			inval = samplePath.enabledTransitions.collect {| aSymbol |
-				streamDict.at( aSymbol ).next( inval ) // or use embedInStream?
+				net.sourceAt( aSymbol ).value;
 			}.asArray;
 
 			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
