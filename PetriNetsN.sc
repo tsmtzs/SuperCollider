@@ -575,7 +575,7 @@ PNPatternN : Pattern {
 	storeArgs { ^ [ petriNet, length, marking, sources ] }
 
 	embedInStream {| inval |
-		var samplePath, transitions, streamDict, net;
+		var samplePath, streamDict, net;
 
 		net = petriNet;					// copy
 
@@ -591,7 +591,7 @@ PNPatternN : Pattern {
 
 		samplePath.computeInitEnabledTransitions;
 
-		length.value.do {
+		length.do {
 			inval = samplePath.enabledTransitions.collect {| aSymbol |
 				net.sourceAt( aSymbol ).value;
 			}.asArray;

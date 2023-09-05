@@ -61,9 +61,9 @@ a = PetriNetN(
 )
 )
 
-~objects = ( t1: 100, t2: Pseq([ 200, 0.2 ], inf ), t3: 300, t4: 400, t5: 500, t6: 600 )
+~objects = ( t1: 100, t2: Pseq([ 1200, 1000 ], inf ).asStream, t3: 300, t4: 400, t5: 500, t6: 600 )
 a.setSources( ~objects )
-a.setSource( \t6, Pfunc { 0.02.rand2 } )
+a.setSource( \t6, Pfunc { 0.02.rand2 } .asStream )
 
 (
 ~objects = (
@@ -87,15 +87,13 @@ p = PNPatternN( a, ~marking, inf, ~objects )
 q = p.asStream
 q.nextN( 20 )
 
-p.play
-
-// Remark: Works ONLY with value patterns
-
 //////////////////////////////////////////////////////////////////////
 // Tests for revision 29  of PetriNetsN.sc
 //////////////////////////////////////////////////////////////////////
 
 (
+[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+
 a = PetriNetN(
 	(
 		\transition: \t1,
@@ -172,9 +170,9 @@ a.transitions
 }
 )
 
+(
 [ PNPlaceN, PNTransitionN ].do (_.clearAll);
 
-(
 a = PetriNetN( *(~series.( 3 )) );
 )
 
