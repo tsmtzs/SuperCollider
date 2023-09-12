@@ -84,16 +84,15 @@ PNTransitionN {
 
 	*initClass{
 		all = IdentityDictionary.new;
-		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
-		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
+		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
+		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
 			//transition is enabled when all input places contain at least one token
 			//and all inhibitor places contain no tokens. The message asCollection added
 			//to prevent nil sets of places
-			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.every({| elem | elem == true })
-			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.every({| elem | elem == true }) // if tokens is positive integer
+			inputPlaces.asCollection.every { |elem| elem.tokens !== 0 }
 			and:
-			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.every({| elem | elem  == true }) }
+			{ inhibitorPlaces.asCollection.every { |elem| elem.tokens === 0 } }
 		};
 	}
 
@@ -135,8 +134,8 @@ PNTransitionN {
 		this.inputPlaces_( inputPlaces )
 		.outputPlaces_( outputPlaces )
 		.inhibitorPlaces_( inhibitorPlaces )
-		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) } )
-		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
+		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.() } )
+		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.() } )
 		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } );
 	}
 
