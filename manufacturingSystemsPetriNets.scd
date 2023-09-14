@@ -1,4 +1,4 @@
-// Examples from 
+// Examples from
 // Petri nets and manufacturing systems: An examples-driven tour
 // by L. Recalde , M. Silva, J. Ezpeleta , and E. Teruel
 // for revisions > 23 of PetriNetsN.sc
@@ -207,30 +207,6 @@ p = PetriNetN(
 p.marking
 
 p.play
-
-// Ex. 2
-(
-Ndef(\a, { var env,xn = 40, r = 6;
-  3.do({
-	xn = SinOsc.ar( 0,  r*xn, 0.8, xn * 0.4 );
-	r = SinOsc.ar( MouseY.kr(0.05,1) * r.abs * xn.abs, mul: MouseX.kr( 0.01, 2) ); 
-});
-
-LeakDC.ar( xn, 0.8 ) ! 2
-})
-)
-
-(
-Ndef(\a,{ var env,xn = 4.6, r = 37;
-	3.do({
-		xn = SinOsc.ar( r * xn ) ;
-		r = SinOsc.ar(  r.abs * xn.abs * MouseY.kr(0,1) , mul: MouseX.kr( 0, 500 ) ); 
-	});
-
-	LeakDC.ar( xn, 0.8 ) ! 2
-})
-)
-
 //////////////////////////////////////////////////////////////////////
 // Basic pull control system
 //////////////////////////////////////////////////////////////////////

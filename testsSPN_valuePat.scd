@@ -1,88 +1,4 @@
 //////////////////////////////////////////////////////////////////////
-// Tests for revisions 18, 23 of PetriNetsN.sc
-//////////////////////////////////////////////////////////////////////
-
-(
-~updateFunction = {
-	var place = PNPlaceN(\p2);
-	if ( place.tokens < 1 ){ place.addOneToken }
-}
-)
-
-(
-a = PetriNetN(
-	(
-		\transition: \t1,
-		\inputPlaces: [\p1],
-		\outputPlaces: [\p2],
-		\inhibitorPlaces: [],
-	),
-	(
-		\transition: \t2,
-		\inputPlaces: [\p2],
-		\outputPlaces: [\p3,\p4],
-		\inhibitorPlaces: []
-		// \updateOutputPlaces: {| outputPlaces |
-		// 	outputPlaces.choose.addOneToken;
-		// }
-	),
-	(
-		\transition: \t3,
-		\inputPlaces: [\p3],
-		\outputPlaces: [\p5],
-		\inhibitorPlaces: [],
-	),
-	(
-		\transition: \t4,
-		\inputPlaces: [\p4],
-		\outputPlaces: [\p6],
-		\inhibitorPlaces: [],
-	),
-	(
-		\transition: \t5,
-		\inputPlaces: [\p5],
-		\outputPlaces: [\p2],
-		\inhibitorPlaces: [],
-		// \updateOutputPlaces: ~updateFunction,
-	),
-	(
-		\transition: \t6,
-		\inputPlaces: [\p6],
-		\outputPlaces: [\p2],
-		\inhibitorPlaces: [],
-		// \updateOutputPlaces: ~updateFunction,
-	)
-)
-)
-
-~objects = ( t1: 1, t2: 2, t3: 3, t4: 4, t5: 5, t6: 6 )
-(
-~objects = (
-	t1: ( freq: 100, amp: 0.5, dur: 0.5 ),
-	t2: ( freq: 200, amp: 0.2, dur: 0.5 ),
-	t3: ( freq: 300, amp: 0.2, dur: 0.5 ),
-	t4: ( freq: 400, amp: 0.2, dur: 0.5 ),
-	t5: ( freq: 500, amp: 0.2, dur: 0.5 ),
-	t6: ( freq: 600, amp: 0.2, dur: 0.5 )
-)
-)
-
-(
-~marking = 	a.marking.keysValuesChange({| key, value |
-		value = if( key == 'p1' ){ 1 }{ 0 };
-	})
-)
-
-p = PNPatternN( a, ~objects, ~marking, inf )
-p = p.asStream
-
-p.nextN( 20 )
-
-p.play
-
-// Remark: Works ONLY with value patterns
-
-//////////////////////////////////////////////////////////////////////
 // Tests for revision 26  of PetriNetsN.sc
 //////////////////////////////////////////////////////////////////////
 
@@ -145,9 +61,9 @@ a = PetriNetN(
 )
 )
 
-~objects = ( t1: 100, t2: Pseq([ 200, 0.2 ], inf ), t3: 300, t4: 400, t5: 500, t6: 600 )
+~objects = ( t1: 100, t2: Pseq([ 1200, 1000 ], inf ).asStream, t3: 300, t4: 400, t5: 500, t6: 600 )
 a.setSources( ~objects )
-a.setSource( \t6, Pfunc { 0.02.rand2 } )
+a.setSource( \t6, Pfunc { 0.02.rand2 } .asStream )
 
 (
 ~objects = (
@@ -169,18 +85,15 @@ a.setSource( \t6, Pfunc { 0.02.rand2 } )
 p = PNPatternN( a, ~marking, inf)
 p = PNPatternN( a, ~marking, inf, ~objects )
 q = p.asStream
-
 q.nextN( 20 )
-
-p.play
-
-// Remark: Works ONLY with value patterns
 
 //////////////////////////////////////////////////////////////////////
 // Tests for revision 29  of PetriNetsN.sc
 //////////////////////////////////////////////////////////////////////
 
 (
+[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+
 a = PetriNetN(
 	(
 		\transition: \t1,
@@ -257,9 +170,9 @@ a.transitions
 }
 )
 
+(
 [ PNPlaceN, PNTransitionN ].do (_.clearAll);
 
-(
 a = PetriNetN( *(~series.( 3 )) );
 )
 
@@ -305,7 +218,7 @@ q.stop
 a.push
 // the following doesn't work due to the initialization of
 // streamDict var in embedInStream method of PNEventPattern
-~t0.source = ( type: \on, freq: 219, amp: 0.2 ) // ok if use 
+~t0.source = ( type: \on, freq: 219, amp: 0.2 ) // ok if use
 ~t0.clock = 0.2;							// ok
 ~p0.tokens = 1;							// ok
 ~p0.addOneToken;						// ok
@@ -348,7 +261,7 @@ a = PetriNetN(
 var transition, p = 0.6;
 transition = a.at(\e1);
 transition.updateOutputPlaces_( {| outputPlaces, net |
-	if( p.coin ){ 
+	if( p.coin ){
 		net[ \d2 ].addOneToken
 	}{
 		net[ \d1 ].addOneToken
@@ -645,8 +558,8 @@ a.marking
 
 (
 a.setMarking(
-	().putAll( *( 
-		~rings.collect {|i| 
+	().putAll( *(
+		~rings.collect {|i|
 			if( i == 0 ){
 				~perRingInitMarking.( i, 1 )
 			}{
@@ -693,7 +606,7 @@ SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
 			inputPlaces: [ ( "d3" ++ index ).asSymbol ],
 			outputPlaces: [ ( "d2" ++ index).asSymbol, ( "d4" ++ index ).asSymbol ],
 			inhibitorPlaces: [],
-			clock:  [ 0.25, 2/7, 4/9 ].choose 
+			clock:  [ 0.25, 2/7, 4/9 ].choose
 		),
 		(
 			transition: ( "e3" ++ index ).asSymbol,
@@ -744,8 +657,8 @@ a = PetriNetN( *net );
 
 (
 a.setMarking(
-	().putAll( *( 
-		~rings.collect {|i| 
+	().putAll( *(
+		~rings.collect {|i|
 			if( i == 0 ){
 				~perRingInitMarking.( i, 1 )
 			}{
@@ -764,16 +677,16 @@ scale = Scale.scriabin.degrees;
 ~perRingSources ={| index, aPetriNet|
 	(
 		( "e1" ++ index ).asSymbol : (
-			type: \on, instrument: \help_mdapiano, freq: { 
-			( 50.rrand(55) + scale + [-12,0,12].choose ).midicps.choose 
-			}, amp: 0.2 
+			type: \on, instrument: \help_mdapiano, freq: {
+			( 50.rrand(55) + scale + [-12,0,12].choose ).midicps.choose
+			}, amp: 0.2
 		),
 		( "e2" ++ index ).asSymbol : (
 			type: \on, instrument: \help_mdapiano, freq: ( 62 + scale + [-12,0,12].choose ).midicps.choose, amp: 0.1
 		),
 		( "e3" ++ index ).asSymbol : (
-			type: \on, instrument: \help_mdapiano, freq: { 
-			( 74 + scale + [-12,0,12].choose ).midicps.choose 
+			type: \on, instrument: \help_mdapiano, freq: {
+			( 74 + scale + [-12,0,12].choose ).midicps.choose
 		}, amp: 0.2
 		)
 	)
@@ -865,8 +778,8 @@ a = PetriNetN(
 )
 
 (
-a.setMarking( 
-	( d1:0, d2:0, d3:1, d4:0, d5:0, d6:0, d7:1, d8:1, d9:1 ) 
+a.setMarking(
+	( d1:0, d2:0, d3:1, d4:0, d5:0, d6:0, d7:1, d8:1, d9:1 )
 )
 )
 
@@ -992,7 +905,7 @@ a = PetriNetN(
 		inputPlaces: [\d123],
 		outputPlaces: [\d41,\d42,\d43],
 		inhibitorPlaces: [],
-		clock: 0.5,
+		clock: 0.25,
 		updateOutputPlaces: ~updateFunction,
 		source: ( type: \on, freq: 62.midicps, instrument: \help_mdapiano )
 	)
@@ -1002,7 +915,7 @@ a = PetriNetN(
 (
 a.setMarking(
 	a.marking.keysValuesChange {| key, value |
-		value = if( 
+		value = if(
 			key == \d41 or: { key == \d42 } or: { key == \d43 } or: { key == \d31 } or: { key == \d32 } ){ 1 }{ 0 };
 	}
 )
@@ -1028,12 +941,12 @@ a = PetriNetN(
 		inhibitorPlaces: [],
 		clock: 0
 	),
-	( 
+	(
 		transition: \e1,
 		inputPlaces: [ \d1 ],
 		outputPlaces: [ \d0 ],
 		inhibitorPlaces: [ ],
-		source: {| aPetriNet | 
+		source: {| aPetriNet |
 			var id = s.nextNodeID;
 			aPetriNet.put( ( 'e0' ++ 'ID').asSymbol, id );
 			( type: \on, id: id )

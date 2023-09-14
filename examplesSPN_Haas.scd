@@ -170,7 +170,7 @@ Pdef.all.do {|pdef| pdef.quant = 0; }
 ~scale = (0..11).scramble.keep( 9 )
 
 (
-Pdef2(\e1,
+Pdef(\e1,
 	Pbind(
 		\freq, Prand( 50 + ~scale, 1).midicps,
 		\amp, 0.2,
@@ -179,7 +179,7 @@ Pdef2(\e1,
 	)
 );
 
-Pdef2(\e3,
+Pdef(\e3,
 	Pbind(
 		\freq, Prand( 62 + ~scale, 1).midicps,
 		\amp, 0.1,
@@ -188,7 +188,7 @@ Pdef2(\e3,
 	)
 );
 
-Pdef2(\e4,
+Pdef(\e4,
 	Pbind(
 		\freq, Prand( 74 + ~scale, 1).midicps,
 		\amp, 0.2,
@@ -197,7 +197,7 @@ Pdef2(\e4,
 	)
 );
 
-Pdef2(\e6,
+Pdef(\e6,
 	Pbind(
 		\freq, Prand( 86 + ~scale, inf).midicps,
 		\amp, 0.05,
@@ -219,7 +219,7 @@ a = SPetriNet( \ex2,
 		\isTimed: true,
 		\clock: { 1.0.rrand( 2.0 ) },
 		\dependants: (
-			\sound: Pdef2(\e1)
+			\sound: Pdef(\e1)
 		)
 	),
 	(
@@ -237,7 +237,7 @@ a = SPetriNet( \ex2,
 		\isTimed: true,
 		\clock: { 1.0.rrand( 2.0 ) },
 		\dependants: (
-			\sound: Pdef2(\e3)
+			\sound: Pdef(\e3)
 		)
 	),
 	(
@@ -248,7 +248,7 @@ a = SPetriNet( \ex2,
 		\isTimed: true,
 		\clock: { 1.0.rrand( 2.0 ) },
 		\dependants: (
-			\sound: Pdef2(\e4)
+			\sound: Pdef(\e4)
 		)
 	),
 	(
@@ -266,7 +266,7 @@ a = SPetriNet( \ex2,
 		\isTimed: true,
 		\clock: { 1.0.rrand( 2.0 ) },
 		\dependants: (
-			\sound: Pdef2(\e6)
+			\sound: Pdef(\e6)
 		)
 	)
 );
@@ -384,7 +384,7 @@ Pdef.all.do {|pdef| pdef.quant = 0; }
 ~scale = (0..11).scramble.keep( 9 )
 
 (
-Pdef2(\e1,
+Pdef(\e1,
 	Pbind(
 		\freq, Plazy({ [61,62,64].choose } ).midicps,
 		\amp, 0.2,
@@ -393,7 +393,7 @@ Pdef2(\e1,
 	)
 );
 
-Pdef2(\e2,
+Pdef(\e2,
 	Pbind(
 		\freq, Plazy({ [66,68].choose }).midicps,
 		\amp, 0.1,
@@ -402,7 +402,7 @@ Pdef2(\e2,
 	)
 );
 
-Pdef2(\e3,
+Pdef(\e3,
 	Pbind(
 		\freq, Plazy({ [73,75,76].choose }).midicps,
 		\amp, 0.1,
@@ -411,7 +411,7 @@ Pdef2(\e3,
 	)
 );
 
-Pdef2(\e4,
+Pdef(\e4,
 	Pbind(
 		\freq, Plazy({ 50 }).midicps,
 		\amp, 0.6,
@@ -478,7 +478,7 @@ a.play;
 
 // three customers
 (
-Pdef2(\e1,
+Pdef(\e1,
 	Pbind(
 		\freq, Plazy({ [61,62,64].choose } ).midicps,
 		\amp, 0.2,
@@ -487,7 +487,7 @@ Pdef2(\e1,
 	)
 );
 
-Pdef2(\e2,
+Pdef(\e2,
 	Pbind(
 		\freq, Plazy({ [66,68].choose }).midicps,
 		\amp, 0.1,
@@ -496,7 +496,7 @@ Pdef2(\e2,
 	)
 );
 
-Pdef2(\e3,
+Pdef(\e3,
 	Pbind(
 		\freq, Plazy({ [73,75,76].choose }).midicps,
 		\amp, 0.1,
@@ -505,7 +505,7 @@ Pdef2(\e3,
 	)
 );
 
-Pdef2(\e4,
+Pdef(\e4,
 	Pbind(
 		\freq, Plazy({ 50 }).midicps,
 		\amp, 0.2,
@@ -514,7 +514,7 @@ Pdef2(\e4,
 	)
 );
 
-Pdef2(\e5,
+Pdef(\e5,
 	Pbind(
 		\freq, Plazy({ [61,62,64].choose } ).midicps,
 		\amp, 0.2,
@@ -523,7 +523,7 @@ Pdef2(\e5,
 	)
 );
 
-Pdef2(\e6,
+Pdef(\e6,
 	Pbind(
 		\freq, Plazy({ [66,68].choose }).midicps,
 		\amp, 0.1,
