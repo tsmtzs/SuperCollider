@@ -1,5 +1,6 @@
 //a net for tests
 [SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll }
+
 (
 a = SPetriNet(
 	\spn,
@@ -56,10 +57,12 @@ a.addUniqueMethod(\putCurrentStateToFile, {
 )
 
 a.makeB1
-f = File("~/tests/tsa".asAbsolutePath, "w" )
+f = File(File.getcwd +/+ "test", "w" )
 a.putCurrentStateToFile( f, showMarking: true, showClockReadings: true )
 a.putCurrentStateToFile( f )
 f.close
+
+File.delete(File.getcwd +/+ "test");
 
 (
 a.removeUniqueMethod(\samplePathAlgorithm);
@@ -97,7 +100,7 @@ a = SPetriNet(\spn,
 		\inputPlaces: [\p2],
 		\outputPlaces: [\p1],
 		\inhibitorPlaces: [],
-		\clock: { 1 }
+		\clock: { 2 }
 	),
 	(
 		\transition: \t2,
@@ -148,7 +151,6 @@ a.reset
 
 //////////////////////////////////////////////////////////////////////
 // Immediate transitions in real time
-
 (
 [ SPetriNet, SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
 
@@ -585,7 +587,7 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 	});
 
 	env  = EnvGen.kr( Env.cutoff( 1 ) , gate, doneAction: 2 );
-	//xn = HPF.ar(xn,30,0.03);
+	xn = HPF.ar(xn,80,0.03);
 
 	Out.ar( out, Pan2.ar( xn * env, pan, amp ) )
 }).add

@@ -12,7 +12,7 @@ SPNPlace {
 	//methods *new, *at and prAdd from Pdef
 
 	// global storage
-	*at { arg key;
+	*at { | key |
 		^this.all.at(key)
 	}
 
@@ -61,11 +61,11 @@ SPNPlace {
 		tokens = tokens - anInteger;
 	}
 
-	isEmpty { ^ tokens == 0 }
+	isEmpty { ^ tokens === 0 }
 
 	gui {| aWindow | }
 
-	printOn { arg stream;
+	printOn { | stream |
 		stream << this.class.name << "( "<< name <<" , " << tokens  << " )";
 	}
 
@@ -89,16 +89,15 @@ SPNImmediateTransition {
 
 	*initClass{
 		all = IdentityDictionary.new;
-		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
-		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
+		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
+		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
 			//transition is enabled when all input places contain at least one token
 			//and all inhibitor places contain no tokens. The message asCollection added
 			//to prevent nil sets of places
-			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.includes( false ).not
-			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.includes( false ).not // if tokens is positive integer
+			inputPlaces.asCollection.every{ |elem| elem.tokens !== 0 }
 			and:
-			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.includes( false ).not }
+			{ inhibitorPlaces.asCollection.every { |elem| elem.tokens === 0 } }
 		};
 		clockSpeedDefault = 1;
 	}
@@ -122,7 +121,7 @@ SPNImmediateTransition {
 	}
 
 	// global storage
-	*at { arg key;
+	*at { | key |
 		^this.all.at(key)
 	}
 
@@ -230,7 +229,7 @@ SPNImmediateTransition {
 
 	gui { | aWindow | }
 
-	printOn { arg stream;
+	printOn { | stream |
 		stream << this.class.name << "( "<< this.name << " )";
 	}
 
@@ -261,7 +260,7 @@ SPNImmediateTransition {
 		theDependants = dependantsDictionary.at(this);
 		if (theDependants.notNil, {
 			theDependants.removeAt( key );
-			if (theDependants.size == 0, {
+			if (theDependants.size === 0, {
 				dependantsDictionary.removeAt(this);
 			});
 		});
@@ -366,7 +365,7 @@ SPetriNet {
 		}
 	}
 
-	*at { arg key;
+	*at { | key |
 		^this.all.at(key)
 	}
 
@@ -457,7 +456,6 @@ SPetriNet {
 			};
 			SPNPlace( key, value );
 		};
-		^ Post<<"The new marking is\n\t "<<this.marking<<"\n";
 	}
 
 	//the algorithm to generate a sample for the underlying process of the SPetriNet
@@ -485,7 +483,7 @@ SPetriNet {
 		};
 		holdingTime = enabledTransitions.collect{|e| e.clockReading }.minItem;
 		firingTransitions = enabledTransitions.select {|e|
-			e.clockReading == holdingTime;
+			e.clockReading === holdingTime;
 		};
 	}
 	//step 3:
@@ -708,7 +706,7 @@ SPetriNet {
 	}
 
 	postCurrentState{ |showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
-		Post<<this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings, showHoldingTime );
+		Post << this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings, showHoldingTime );
 	}
 
 	initTimeDurPairs {
