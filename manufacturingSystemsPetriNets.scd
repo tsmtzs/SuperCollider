@@ -210,7 +210,6 @@ p.play
 //////////////////////////////////////////////////////////////////////
 // Basic pull control system
 //////////////////////////////////////////////////////////////////////
-
 (
 ~bpcs = {| index = 0, startDeliveryPlace, demandsPlace, demandsClock = 1, demandsSource, machine1Clock = 1, machine1Source, k1 = 1, machine2Clock = 1, machine2Source, k2 = 1, assemblySource, machine3Clock = 1, machine3Source, k3 = 1, deliveryDestPlace, deliverySource |
 	[
@@ -269,7 +268,6 @@ p.play
 //////////////////////////////////////////////////////////////////////
 // Simultaneous kanban control system
 //////////////////////////////////////////////////////////////////////
-
 (
 ~skcs = {| index = 0, demandsPlace, demandsClock = 1, demandsSource, machine1Clock = 1, machine1Source, k1 = 1, machine2Clock = 1, machine2Source, k2 = 1, assemblySource, machine3Clock = 1, machine3Source, k3 = 1, deliveryDestPlace, deliverySource |
 

@@ -16,7 +16,7 @@ PNPlaceN {
 		var place;
 		place = this.at( key );
 		if( place.isNil ){
-			place = super.newCopyArgs( key, anInteger ?? { 0 } ).store;
+			place = super.newCopyArgs( key, anInteger ?? { 0 } ).prAdd;
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) }
 		};
@@ -25,12 +25,12 @@ PNPlaceN {
 
 	*clearAll { this.all.clear }
 
-	store {
+	prAdd {
 		all.put( name, this );
 	}
 
 	tokens_ { | anInteger |
-		this.warn( anInteger );		// remove this line?
+		this.throwIfNotValidInt( anInteger );		// remove this line?
 		tokens = anInteger;
 	}
 
@@ -39,17 +39,17 @@ PNPlaceN {
 	removeOneToken { tokens = 0.max(tokens - 1) }
 
 	addTokens { | anInteger |
-		this.warn( anInteger );
+		this.throwIfNotValidInt( anInteger );
 		tokens = tokens + anInteger;
 	}
 
 	removeTokens { | anInteger |
-		// this.warn( anInteger );
+		// this.throwIfNotValidInt( anInteger );
 		// tokens = tokens - anInteger;
 		this.addTokens( -1 * anInteger );
 	}
 
-	isEmpty { ^ tokens == 0 }
+	isEmpty { ^ tokens === 0 }
 
 	gui {| aWindow | }
 
@@ -57,10 +57,13 @@ PNPlaceN {
 		stream << this.class.name << "( " << name <<" , " << tokens  << " )";
 	}
 
-// Modify method warning so that it can print or not the message?
-	warn {| anObject |
-		if( anObject.isKindOf( Integer ).not ){
-			("\nThe number" + anObject.asString + "is not an integer").warn
+	throwIfNotValidInt {| anObject |
+		if ( anObject.isKindOf( Integer ).not ) {
+			Error("Argument % is not an integer".format( anObject.asString )).throw;
+		};
+
+		if( anObject < 0 ){
+			Error("Tokens % should be positive".format( anObject )).throw;
 		};
 	}
 

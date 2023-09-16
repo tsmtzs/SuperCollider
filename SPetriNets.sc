@@ -2,7 +2,7 @@
 // $Rev$
 SPNPlace {
 	classvar <>all;
-	var <tokens, <>name;
+	var <>name, <tokens;
 	var <isInhibitorPlaceTo, <isInputPlaceTo, <isOutputPlaceTo;//arrays of Transitions
 
 	*initClass {
@@ -20,7 +20,7 @@ SPNPlace {
 		var place;
 		place = this.at( key );
 		if( place.isNil){
-			place = super.newCopyArgs( anInteger ?? { 0 } ).prAdd( key ).init;
+			place = super.newCopyArgs( key, anInteger ?? { 0 } ).prAdd.init;
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) };
 		}
@@ -31,34 +31,37 @@ SPNPlace {
 		this.all.clear;
 	}
 
-	init {
-		isInputPlaceTo = List[];
-		isInhibitorPlaceTo = List[];
-		isOutputPlaceTo = List[];
+	prAdd {
+		all.put( name, this );
 	}
 
-	prAdd {| argKey |
-		all.put( argKey, this );
-		name = argKey;
+	init {
+		isInputPlaceTo = List [];
+		isInhibitorPlaceTo = List [];
+		isOutputPlaceTo = List [];
 	}
+
+	// prAdd {| argKey |
+	// 	all.put( argKey, this );
+	// 	name = argKey;
+	// }
 
 	tokens_ { | anInteger |
-		this.warning( anInteger );
+		this.throwIfNotValidInt( anInteger );
 		tokens = anInteger;
 	}
 
 	addOneToken { tokens = tokens + 1 }
 
-	removeOneToken { tokens = tokens - 1 }//allow negative number of tokens
+	removeOneToken { tokens = 0.max(tokens - 1) }
 
 	addTokens { | anInteger |
-		this.warning( anInteger );
+		this.throwIfNotValidInt( anInteger );
 		tokens = tokens + anInteger;
 	}
 
 	removeTokens { | anInteger |
-		this.warning( anInteger );
-		tokens = tokens - anInteger;
+		this.addTokens( -1 * anInteger );
 	}
 
 	isEmpty { ^ tokens === 0 }
@@ -69,12 +72,18 @@ SPNPlace {
 		stream << this.class.name << "( "<< name <<" , " << tokens  << " )";
 	}
 
-	// Modify method warning so that it can print or not the message?
-	warning {| anObject |
-		if( anObject.isKindOf( Integer ).not ){
-			("\nPlace"+this.name.asString+anObject.asString + "is not an integer").warn
+	throwIfNotValidInt {| anObject |
+		if ( anObject.isKindOf( Integer ).not ) {
+			Error("Argument % is not an integer".format( anObject.asString )).throw;
+		};
+
+		if( anObject < 0 ){
+			Error("Tokens % should be positive".format( anObject )).throw;
 		};
 	}
+
+	isTransition { ^false }
+	isPlace { ^true }
 }
 
 SPNImmediateTransition {
