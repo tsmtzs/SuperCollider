@@ -47,7 +47,7 @@ PNTransitionN {
 			transition = this.basicNew( name )
 			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
 			.source_( source )
-			.store;
+			.prAdd;
 		}{
 			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
 			.source_( source );
@@ -61,7 +61,7 @@ PNTransitionN {
 	}
 
 
-	store { all.put( name, this ) }
+	prAdd { all.put( name, this ) }
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )

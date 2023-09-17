@@ -11,7 +11,7 @@ SPNImmediateTransition {
 	var <clock = 0, <>clockReading; // clock is a function with first arg a SPetriNet, and clockReading is a value of this function
 	var <currentState;				// put this var in subclass SPNTimedTransition only?
 
-	*initClass{
+	*initClass {
 		all = IdentityDictionary.new;
 		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
 		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
