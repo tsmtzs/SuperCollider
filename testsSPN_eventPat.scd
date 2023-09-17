@@ -60,9 +60,6 @@ a.makeB1
 f = File(File.getcwd +/+ "test", "w" )
 a.putCurrentStateToFile( f, showMarking: true, showClockReadings: true )
 a.putCurrentStateToFile( f )
-f.close
-
-File.delete(File.getcwd +/+ "test");
 
 (
 a.removeUniqueMethod(\samplePathAlgorithm);
@@ -85,8 +82,10 @@ a.samplePathAlgorithm( 5, 4, \putCurrentStateToFile, f )
 a.computeInitEnabledTransitions;
 a.prSamplePathsWithPerform(4, \putCurrentStateToFile , f )
 a.prSamplePathsBasic(4 )
-f.close
 a.samplePathAlgorithm(15, 5.6, \postCurrentState )
+
+f.close
+File.delete(File.getcwd +/+ "test");
 
 //////////////////////////////////////////////////////////////////////
 // Adding sound objects to Transitions -- playing them in real Time

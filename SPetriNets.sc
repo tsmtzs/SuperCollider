@@ -3,7 +3,6 @@
 SPNPlace {
 	classvar <>all;
 	var <>name, <tokens;
-	var <isInhibitorPlaceTo, <isInputPlaceTo, <isOutputPlaceTo;//arrays of Transitions
 
 	*initClass {
 		all = IdentityDictionary.new;
@@ -20,7 +19,7 @@ SPNPlace {
 		var place;
 		place = this.at( key );
 		if( place.isNil){
-			place = super.newCopyArgs( key, anInteger ?? { 0 } ).prAdd.init;
+			place = super.newCopyArgs( key, anInteger ?? { 0 } ).prAdd;
 		}{
 			if( anInteger.notNil ){ place.tokens_( anInteger ) };
 		}
@@ -34,17 +33,6 @@ SPNPlace {
 	prAdd {
 		all.put( name, this );
 	}
-
-	init {
-		isInputPlaceTo = List [];
-		isInhibitorPlaceTo = List [];
-		isOutputPlaceTo = List [];
-	}
-
-	// prAdd {| argKey |
-	// 	all.put( argKey, this );
-	// 	name = argKey;
-	// }
 
 	tokens_ { | anInteger |
 		this.throwIfNotValidInt( anInteger );
@@ -150,8 +138,7 @@ SPNImmediateTransition {
 		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) }  )
 		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
 		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } )
-		.clockSpeed_( clockSpeed ?? { clockSpeedDefault } )
-		.informPlaces;
+		.clockSpeed_( clockSpeed ?? { clockSpeedDefault } );
 	}
 
 	inputPlaces_ {| inputPlacesSet |
@@ -209,14 +196,6 @@ SPNImmediateTransition {
 		}{
 			aCollection
 		}
-	}
-
-	// modify this method to avoid duplicate writings
-	informPlaces {
-		var instanceName = this.name;
-		this.inputPlaces( false ).do {| place | place.isInputPlaceTo.add( instanceName ) };
-		this.outputPlaces( false ).do {| place | place.isOutputPlaceTo.add( instanceName ) };
-		this.inhibitorPlaces( false ).do {| place | place.isInhibitorPlaceTo.add( instanceName ) };
 	}
 
 	fire {| aSPetriNet |
