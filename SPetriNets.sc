@@ -1,83 +1,10 @@
 // $LastChangedDate$
 // $Rev$
-SPNPlace {
-	classvar <>all;
-	var <>name, <tokens;
-
-	*initClass {
-		all = IdentityDictionary.new;
-	}
-
-	//methods *new, *at and prAdd from Pdef
-
-	// global storage
-	*at { | key |
-		^this.all.at(key)
-	}
-
-	*new {| key, anInteger |
-		var place;
-		place = this.at( key );
-		if( place.isNil){
-			place = super.newCopyArgs( key, anInteger ?? { 0 } ).prAdd;
-		}{
-			if( anInteger.notNil ){ place.tokens_( anInteger ) };
-		}
-		^place
-	}
-
-	*clearAll {
-		this.all.clear;
-	}
-
-	prAdd {
-		all.put( name, this );
-	}
-
-	tokens_ { | anInteger |
-		this.throwIfNotValidInt( anInteger );
-		tokens = anInteger;
-	}
-
-	addOneToken { tokens = tokens + 1 }
-
-	removeOneToken { tokens = 0.max(tokens - 1) }
-
-	addTokens { | anInteger |
-		this.throwIfNotValidInt( anInteger );
-		tokens = tokens + anInteger;
-	}
-
-	removeTokens { | anInteger |
-		this.addTokens( -1 * anInteger );
-	}
-
-	isEmpty { ^ tokens === 0 }
-
-	gui {| aWindow | }
-
-	printOn { | stream |
-		stream << this.class.name << "( "<< name <<" , " << tokens  << " )";
-	}
-
-	throwIfNotValidInt {| anObject |
-		if ( anObject.isKindOf( Integer ).not ) {
-			Error("Argument % is not an integer".format( anObject.asString )).throw;
-		};
-
-		if( anObject < 0 ){
-			Error("Tokens % should be positive".format( anObject )).throw;
-		};
-	}
-
-	isTransition { ^false }
-	isPlace { ^true }
-}
 
 SPNImmediateTransition {
 	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
-	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of SPNPlace instances or names of SPNPlaces
+	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>clockSpeed, <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 	var <>name, <>spnMediator;
@@ -180,8 +107,8 @@ SPNImmediateTransition {
 		var place;
 		^ aCollection.collect {| elem |
 			if( elem.isKindOf( Symbol ) ){
-				place = SPNPlace.at( elem );
-				if( place.isNil ){ place = SPNPlace( elem ); };
+				place = PNPlace.at( elem );
+				if( place.isNil ){ place = PNPlace( elem ); };
 				place
 			}{
 				elem
@@ -190,7 +117,7 @@ SPNImmediateTransition {
 	}
 
 	prGetPlaces {| aCollection, aBoolean = false |
-		// aBoolean: if true, get symbols, otherwise get SPNPlace instances
+		// aBoolean: if true, get symbols, otherwise get PNPlace instances
 		^ if( aBoolean ){
 			aCollection.collect {| elem | elem.name }
 		}{
@@ -385,9 +312,9 @@ SPetriNet {
 	prAddPlacesBasic {| anArray |
 		var place;
 		anArray.do {| aSymbol |
-			place = SPNPlace.at( aSymbol );
+			place = PNPlace.at( aSymbol );
 			if( place.isNil ){
-				place = SPNPlace.new( aSymbol );
+				place = PNPlace.new( aSymbol );
 			};
 			this.prAddToList( places, place );
 		};
@@ -437,12 +364,12 @@ SPetriNet {
 		anIdentityDictionary.keysValuesDo {| key, value |
 			// change the boolean test in 'if' with the return value of a method
 			// from a class named SPNUtilities? This class will haave as methods all
-			// the private methods of SPNPlace, SPNImmediateTransition.
+			// the private methods of PNPlace, SPNImmediateTransition.
 			// Specifically, for this method you use the method 'prGetPlaces'
 			if( places.collect {| place | place.name }.includes( key ).not){
 				^ ("Petri net"+this.name.asString+", doesn't have place"+key.asString).error;
 			};
-			SPNPlace( key, value );
+			PNPlace( key, value );
 		};
 	}
 

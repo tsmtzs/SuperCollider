@@ -153,10 +153,10 @@
 (
 var assemblyDonePlace, assemblyOnTrans, rOffPlace, startAssemblyTrans, clockT1, t1Source, clockT2, t2Source, clockT3, t3Source, t4Source, clockT5, t5Source;
 
-[ PNTimedTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTimedTransitionN, PNPlace ].do {|a| a.clearAll };
 
-assemblyDonePlace = PNPlaceN( \done, 1 );
-rOffPlace = PNPlaceN( \rOff, 1 );
+assemblyDonePlace = PNPlace( \done, 1 );
+rOffPlace = PNPlace( \rOff, 1 );
 startAssemblyTrans = PNTimedTransitionN( \startAssembly );
 assemblyOnTrans = PNTimedTransitionN( \assemblyOnTrans );
 

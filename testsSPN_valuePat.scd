@@ -4,7 +4,7 @@
 
 (
 ~updateFunction = {
-	var place = PNPlaceN(\p2);
+	var place = PNPlace(\p2);
 	if ( place.tokens < 1 ){ place.addOneToken }
 }
 )
@@ -92,7 +92,7 @@ q.nextN( 20 )
 //////////////////////////////////////////////////////////////////////
 
 (
-[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+[ PNPlace, PNTransitionN ].do (_.clearAll);
 
 a = PetriNetN(
 	(
@@ -171,7 +171,7 @@ a.transitions
 )
 
 (
-[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+[ PNPlace, PNTransitionN ].do (_.clearAll);
 
 a = PetriNetN( *(~series.( 3 )) );
 )
@@ -235,7 +235,7 @@ a.pop
 //////////////////////////////////////////////////////////////////////
 
 // Haas, Ex. 1.4 p.19
-[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll }
+[ PNTransitionN, PNPlace ].do {|a| a.clearAll }
 (
 a = PetriNetN(
 		(
@@ -311,7 +311,7 @@ a.push;
 // Haas, Ex. 2.1 p.24
 
 (
-[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
 
 a = PetriNetN(
 	(
@@ -377,7 +377,7 @@ a.stop
 // Haas, Ex. 2.2 p.29
 
 (
-[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
 
 a = PetriNetN(
 	(
@@ -429,7 +429,7 @@ a.stop
 // Ex. 2.4 p.31 Haas
 
 (
-[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
 
 a = PetriNetN(
 	(
@@ -535,7 +535,7 @@ p.next(())
 (
 var net;
 
-[ PNTransitionN, PNPlaceN ].do (_.clearAll);
+[ PNTransitionN, PNPlace ].do (_.clearAll);
 
 net = ~rings.collect {|i| ~port.( i, ~rings ) }.flatten;
 
@@ -636,7 +636,7 @@ SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
 (
 var net;
 
-[ PNTransitionN, PNPlaceN ].do (_.clearAll);
+[ PNTransitionN, PNPlace ].do (_.clearAll);
 
 net = ~rings.collect {|i| ~port.( i, ~rings ) }.flat;
 
@@ -714,7 +714,7 @@ a.stop
 )
 
 (
-[ PNTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
 
 a = PetriNetN(
 	(
@@ -814,7 +814,7 @@ a.pop
 )
 
 (
-[ PNTimedTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTimedTransitionN, PNPlace ].do {|a| a.clearAll };
 
 a = PetriNetN(
 	(
@@ -931,7 +931,7 @@ p.next
 // testing the abiltity to set args of a node
 
 (
-[ PNTimedTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTimedTransitionN, PNPlace ].do {|a| a.clearAll };
 
 a = PetriNetN(
 	(

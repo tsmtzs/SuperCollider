@@ -3,7 +3,7 @@
 // by Peter Haas
 
 // Ex. 1.4 p.19
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll }
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
 (
 a = SPetriNet(\ex1,
 	(
@@ -56,7 +56,7 @@ a.setMarking( (\d1:2, \d2:0) )
 a.samplePathAlgorithm( 100, 0, \postCurrentState, *( true ! 7 ) )
 
 // Ex. 2.1 p.24
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll }
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
 
 (
 a = SPetriNet( \ex2,
@@ -132,7 +132,7 @@ transition = SPNImmediateTransition.at( \e1 );
 transition.updateOutputPlaces_( {
 	var tokens = 0;
 	tokens = 3.do {|j| 
-		tokens + SPNPlace( ("d"++ (1+j).asString).asSymbol ).tokens;
+		tokens + PNPlace( ("d"++ (1+j).asString).asSymbol ).tokens;
 	};
 	if( tokens <= b.b1 ){
 		transition.outputPlaces.do {|elem|
@@ -149,7 +149,7 @@ transition = SPNImmediateTransition.at( \e4 );
 transition.updateOutputPlaces_( {
 	var tokens = 0;
 	tokens = 3.do {|j| 
-		tokens + SPNPlace( ("d"++ (4+j).asString).asSymbol ).tokens;
+		tokens + PNPlace( ("d"++ (4+j).asString).asSymbol ).tokens;
 	};
 	if( tokens <= b.b2 ){
 		transition.outputPlaces.do {|elem|
@@ -208,7 +208,7 @@ Pdef(\e6,
 )
 
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \ex2,
 	(
@@ -282,7 +282,7 @@ a.play;
 
 // Ex. 2.2 p.29
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -423,7 +423,7 @@ Pdef(\e4,
 
 // this is not the net from the example.
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -534,7 +534,7 @@ Pdef(\e6,
 )
 
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -641,7 +641,7 @@ a.play;
 
 
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -685,7 +685,7 @@ transition.updateOutputPlaces_( {| outputPlaces, aPetriNet |
 	if( p.coin ){
 		outputPlaces.do {|aPlace| aPlace.addOneToken; }
 	}{
-		SPNPlace(\d3).addOneToken;
+		PNPlace(\d3).addOneToken;
 	}
 }
 )
@@ -763,7 +763,7 @@ transitions.do {|aSymbol|
 (
 ~port = {| index, inputPlace |
 	var transition;
-	[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+	[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 	[
 		(
@@ -812,9 +812,9 @@ var transition;
 		var d1Tokens;
 		d1Tokens = aSPetriNet.marking.at( ( "d1" ++ i ).asSymbol );
 		if( d1Tokens == 1 ){
-			SPNPlace( ( "d3" ++ i ).asSymbol ).addOneToken;
+			PNPlace( ( "d3" ++ i ).asSymbol ).addOneToken;
 		}{
-			SPNPlace( ( "d4" ++ i ).asSymbol ).addOneToken;
+			PNPlace( ( "d4" ++ i ).asSymbol ).addOneToken;
 		}
 	}
 	)
@@ -922,7 +922,7 @@ SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
 )
 
 
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll }
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
 
 ~rings = 5;
 
@@ -1078,7 +1078,7 @@ transitions.do {|aSymbol|
 // Ex. 2.9 p.41
 
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -1135,7 +1135,7 @@ a = SPetriNet( \spn,
 		key == \d4 or: { key == \d5 } or: { key == \d6 }
 	}
 	.findKeyForValue( 0 );
-	if( place.notNil ){ SPNPlace.at(place).addOneToken; };
+	if( place.notNil ){ PNPlace.at(place).addOneToken; };
 }
 )
 
@@ -1156,10 +1156,10 @@ transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 	var n1, n2;
 	n1 = 4.rand;
 	n2 = (4 - n1).rand;
-	SPNPlace.at(\d7).addTokens( n1 );
-	SPNPlace.at(\d8).addTokens( n2 );
+	PNPlace.at(\d7).addTokens( n1 );
+	PNPlace.at(\d8).addTokens( n2 );
 	n2 = 3 - ( n1 + n2 );
-	SPNPlace.at(\d3).addTokens( n2 );
+	PNPlace.at(\d3).addTokens( n2 );
 })
 )
 
@@ -1231,7 +1231,7 @@ transitions.do {|aSymbol|
 // Ex. 2.10 p.44
 
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -1314,10 +1314,10 @@ transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 	var n1, n2;
 	n1 = 4.rand;
 	n2 = (4 - n1).rand;
-	SPNPlace.at(\d111).addTokens( n1 );
-	SPNPlace.at(\d121).addTokens( n2 );
+	PNPlace.at(\d111).addTokens( n1 );
+	PNPlace.at(\d121).addTokens( n2 );
 	n2 = 3 - ( n1 + n2 );
-	SPNPlace.at(\d123).addTokens( n2 );
+	PNPlace.at(\d123).addTokens( n2 );
 })
 )
 
@@ -1330,7 +1330,7 @@ transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 	}
 	.findKeyForValue( 0 );
 	if( place.notNil ){ 
-		SPNPlace.at(place).addOneToken;
+		PNPlace.at(place).addOneToken;
 	};
 	outputPlaces.select {|aPlace| aPlace.name == \d32 }
 	.do {|aPlace| try { aPlace.addOneToken } };
@@ -1434,7 +1434,7 @@ transitions.do {|aSymbol|
 // Ex. 2.11 p.45
 
 (
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet( \spn,
 	(
@@ -1535,4 +1535,4 @@ transitions.do {|aSymbol|
 
 // Ex. 2.12 p.47
 
-[SPetriNet,SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll }
+[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
