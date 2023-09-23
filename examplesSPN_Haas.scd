@@ -3,7 +3,8 @@
 // by Peter Haas
 
 // Ex. 1.4 p.19
-[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+
 (
 a = SPetriNet(\ex1,
 	(

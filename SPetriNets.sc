@@ -220,19 +220,10 @@ SPNTimedTransition : SPNImmediateTransition {
 }
 
 SPetriNet {
-	classvar <>all;						// remove this classvar end the methods 'at', 'clearAll'?
 	var <places, <transitions, firingTransitions, oldTransitions, transitionsB1;
 	var newTransitions, immediateTransitions, enabledTransitions, unionOfB1;
 	var <currentTime, <>timeOffset, <holdingTime;
-	var <>name, <timeDurPairs, <task, <mediator;
-
-	*initClass {
-		all = IdentityDictionary.new;
-	}
-
-	*clearAll {
-		this.all.clear;
-	}
+	var <timeDurPairs, <task, <mediator;
 
 	// Each argument corresponds to one transition and is an IdentityDictionary with keys:
 	// \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
@@ -240,9 +231,8 @@ SPetriNet {
 	// \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
 	*new {| key ... dictionaries |
 		var petriNet;
-		petriNet = this.at( key );
 		if( petriNet.isNil ){
-			petriNet = super.new.prAdd( key ).init( dictionaries );
+			petriNet = super.new.init( dictionaries );
 		}{
 			if( dictionaries.notNil ){
 				petriNet.init( dictionaries )
@@ -278,15 +268,6 @@ SPetriNet {
 			};
 			transition.performWithEnvir( \init, aDict );
 		}
-	}
-
-	*at { | key |
-		^this.all.at(key)
-	}
-
-	prAdd {| argKey |
-		all.put( argKey, this );
-		name = argKey;
 	}
 
 	prAddTransition {| aDict |
@@ -363,11 +344,11 @@ SPetriNet {
 	setMarking {| anIdentityDictionary |
 		anIdentityDictionary.keysValuesDo {| key, value |
 			// change the boolean test in 'if' with the return value of a method
-			// from a class named SPNUtilities? This class will haave as methods all
+			// from a class named SPNUtilities? This class will have as methods all
 			// the private methods of PNPlace, SPNImmediateTransition.
 			// Specifically, for this method you use the method 'prGetPlaces'
 			if( places.collect {| place | place.name }.includes( key ).not){
-				^ ("Petri net"+this.name.asString+", doesn't have place"+key.asString).error;
+				^ ("Petri net, doesn't have place" + key.asString).error;
 			};
 			PNPlace( key, value );
 		};
@@ -394,7 +375,7 @@ SPetriNet {
 	//step 2:
 	computeFiringTransitions {
 		if( enabledTransitions.isEmpty ){
-			^ Error("There are no enabled transitions in petri net"+this.name.asString).throw;
+			^ Error("There are no enabled transitions in this petri net.").throw;
 		};
 		holdingTime = enabledTransitions.collect{|e| e.clockReading }.minItem;
 		firingTransitions = enabledTransitions.select {|e|
