@@ -229,16 +229,8 @@ SPetriNet {
 	// \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
 	// \inhibitorPlaces: setOfInhibitorPlaces or nil, \updateInputPlaces: aFunction(optional),
 	// \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
-	*new {| key ... dictionaries |
-		var petriNet;
-		if( petriNet.isNil ){
-			petriNet = super.new.init( dictionaries );
-		}{
-			if( dictionaries.notNil ){
-				petriNet.init( dictionaries )
-			}
-		};
-		^petriNet
+	*new {| ...dictionaries |
+		^ super.new.init( dictionaries );
 	}
 
 	mediator_ {| aSPNMediator |

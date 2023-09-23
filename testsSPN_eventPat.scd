@@ -1,9 +1,8 @@
 //a net for tests
-[SPetriNet,SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
 
 (
 a = SPetriNet(
-	\spn,
 	(
 		\transition: \t1,
 		\inputPlaces: [\p1],
@@ -91,9 +90,9 @@ File.delete(File.getcwd +/+ "test");
 // Adding sound objects to Transitions -- playing them in real Time
 
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn,
+a = SPetriNet(
 	(
 		\transition: \t1,
 		\inputPlaces: [\p2],
@@ -151,9 +150,9 @@ a.reset
 //////////////////////////////////////////////////////////////////////
 // Immediate transitions in real time
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn,
+a = SPetriNet(
 	(
 		\transition: \t1,
 		\inputPlaces: [\p11],
@@ -264,9 +263,9 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 )
 
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn,
+a = SPetriNet(
 	(
 		\transition: \t1,
 		\inputPlaces: [\p1],
@@ -472,9 +471,9 @@ Pdef( \left,
 )
 
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn,
+a = SPetriNet(
 	(
 		\transition: \t6,
 		\inputPlaces: [\p0],
@@ -701,9 +700,9 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 (
 var components = 10;
 
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\a,
+a = SPetriNet(
 	*(
 		components.collect {|i| ~petriComponent.( \p0, i, s.nextNodeID ) }.flatten
 	)
@@ -812,11 +811,11 @@ a.reset;
 // exaple using the kanban cell
 
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 ~dur = 0.01;
 
-a = SPetriNet(\kan,
+a = SPetriNet(
 	*(
 		~kanbanCell.( 0, 4, \p0, \p1, { 1.0 },
 			( \sound: ( \instrument: \default, \midinote: 60.rrand( 80 ), \amp: 0.2, \pan: 1.0.rand2, \dur: ~dur ) )
@@ -871,12 +870,12 @@ a.stop;
 
 //////////////////////////////////////////////////////////////////////
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
 ~dur = 0.01;
 ~kanbans = 20;
 
-a = SPetriNet(\kan,
+a = SPetriNet(
 	* ~kanbans.collect {|i|
 		~kanbanCell.(
 			i,
@@ -921,9 +920,9 @@ a.stop;
 // add a global storage Environment in SPetriNet?
 
 (
-[ SPetriNet, SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
 
-a = SPetriNet(\spn,
+a = SPetriNet(
 	(
 		\transition: \t1,
 		\inputPlaces: [\p0],
