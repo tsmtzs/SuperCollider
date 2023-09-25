@@ -194,7 +194,7 @@ SPNTimedTransition : SPNImmediateTransition {
 }
 
 SPetriNet {
-	var <places, <transitions, firingTransitions, oldTransitions, transitionsB1;
+	var <places, <transitions, firingTransitions, oldTransitions;
 	var newTransitions, immediateTransitions, enabledTransitions, unionOfB1;
 	var <currentTime, <>timeOffset, <holdingTime;
 	var <timeDurPairs, <task, <mediator;
@@ -218,7 +218,6 @@ SPetriNet {
 		var transition, dependants;
 		places = List [];
 		transitions = List [];
-		transitionsB1 = IdentityDictionary [];
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict );
 			transition = this.prAddTransition( aDict );
@@ -249,6 +248,10 @@ SPetriNet {
 		^transition;
 	}
 
+	prAddToList {| aList, anObject |
+		if( aList.includes( anObject ).not ){ aList.add( anObject ); }
+	}
+
 	prAddPlaces {| aDict |
 		[ \inputPlaces, \inhibitorPlaces, \outputPlaces ].do { | aSymbol|
 			this.prAddPlacesBasic( aDict.at( aSymbol ) );
@@ -264,10 +267,6 @@ SPetriNet {
 			};
 			this.prAddToList( places, place );
 		};
-	}
-
-	prAddToList {| aList, anObject |
-		if( aList.includes( anObject ).not ){ aList.add( anObject ); }
 	}
 
 	marking {
@@ -286,24 +285,20 @@ SPetriNet {
 		.as(Event)
 	}
 
-	// delete instance variable 'transitionsB1' ?
 	makeB1 {
 		var transName;
 		unionOfB1 = Set[];
 		transitions.do {| transition |
 			transName = transition.name;
-			// transitionsB1.put( transName, [] );
 			transitions.do {| trans |
 				if(
 					(transition.outputPlaces.as(Set) & trans.inputPlaces.as(Set) ).isEmpty.not
 					or:
 					{(transition.inputPlaces.as(Set) & trans.inhibitorPlaces.as(Set) ).isEmpty.not} ){
-						// transitionsB1.at( transName ).add( trans );
 						unionOfB1.add( trans );
 					};
 			};
 		};
-		// unionOfB1 = transitionsB1.inject( Set[], _.union( _ ) );//change method with reduce
 	}
 
 	setMarking {| anIdentityDictionary |
