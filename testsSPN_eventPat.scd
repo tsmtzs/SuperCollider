@@ -1,5 +1,5 @@
 //a net for tests
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[ PNPlace ].do {|a| a.clearAll }
 
 (
 a = SPetriNet(
@@ -90,7 +90,7 @@ File.delete(File.getcwd +/+ "test");
 // Adding sound objects to Transitions -- playing them in real Time
 
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -113,13 +113,13 @@ a = SPetriNet(
 (
 m = SPNMediator( \sound );
 
-~t1 = SPNImmediateTransition.at(\t1);
+~t1 = a.transitions.at( 0 );
 ~t1.spnMediator_( m );
 ~t1.addDependant(\sound , Pdef(\t1, Pbind(\freq, 300, \dur, 1.0 ) ) );
 // ~t1.dependants.at(\sound).source = Pbind(\freq, 250, \dur, 0.5 );
 // ~t1.clock_({ 2.0 } );
 
-~t2 = SPNImmediateTransition.at(\t2);
+~t2 = a.transitions.at(1);
 ~t2.spnMediator_( m );
 ~t2.addDependant(\sound ,
 	Pdef(\t2,
@@ -150,7 +150,7 @@ a.reset
 //////////////////////////////////////////////////////////////////////
 // Immediate transitions in real time
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -187,13 +187,13 @@ a = SPetriNet(
 (
 m = SPNMediator( \sound );
 
-~t1 = SPNImmediateTransition.at(\t1);
+~t1 = a.transitions.at(0);
 ~t1.spnMediator_( m );
 ~t1.addDependant(\sound , Pdef(\t1, Pbind(\freq, 300, \dur, 10.0 ) ) );
 // ~t1.dependants.at(\sound).source = Pbind(\freq, 250, \dur, 0.5 );
 // ~t1.clock_({ 2.0 } );
 
-~t2 = SPNImmediateTransition.at(\t2);
+~t2 = a.transitions.at(1);
 ~t2.spnMediator_( m );
 ~t2.addDependant(\sound ,
 	Pdef(\t2,
@@ -206,10 +206,10 @@ m = SPNMediator( \sound );
 );
 // ~t2.clock_( { 1.15 } );
 
-~t3 = SPNImmediateTransition.at(\t3);
+~t3 = a.transitions.at(2);
 ~t3.spnMediator_( m );
 
-~t4 = SPNImmediateTransition.at(\t4);
+~t4 = a.transitions.at(3);
 ~t4.spnMediator_( m );
 ~t4.addDependant(\sound, Pdef(\t4, Pbind( \freq, 500, \dur, 0.1, \amp, 0.7)));
 )
@@ -263,7 +263,7 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 )
 
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -471,7 +471,7 @@ Pdef( \left,
 )
 
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -700,7 +700,7 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 (
 var components = 10;
 
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	*(
@@ -811,7 +811,7 @@ a.reset;
 // exaple using the kanban cell
 
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 ~dur = 0.01;
 
@@ -870,7 +870,7 @@ a.stop;
 
 //////////////////////////////////////////////////////////////////////
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[  PNPlace ].do {|a| a.clearAll };
 
 ~dur = 0.01;
 ~kanbans = 20;
@@ -920,7 +920,7 @@ a.stop;
 // add a global storage Environment in SPetriNet?
 
 (
-[ SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(

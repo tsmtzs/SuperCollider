@@ -2,17 +2,15 @@
 // $Rev$
 
 SPNImmediateTransition {
-	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
 	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>clockSpeed, <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
-	var <>name, <>spnMediator;
+	var <name, <>spnMediator;
 	var <clock = 0, <>clockReading; // clock is a function with first arg a SPetriNet, and clockReading is a value of this function
 	var <currentState;				// put this var in subclass SPNTimedTransition only?
 
 	*initClass {
-		all = IdentityDictionary.new;
 		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
 		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
@@ -27,35 +25,16 @@ SPNImmediateTransition {
 	}
 
 	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
-		var transition;
-		transition = this.at( key );
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
-			^("There are  common Places in InputPlaces and InhibitorPlaces of transition"+key.asString).error;
+			^("There are  common Places in InputPlaces and InhibitorPlaces of transition" + key.asString).error;
 		};
-		if( transition.isNil ){
-			transition = this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
-		}{
-			if(
-				[ inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed ].any {| elem | elem.notNil }
-			){
-				transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
-			}
-		}
-		^transition
-	}
 
-	// global storage
-	*at { | key |
-		^this.all.at(key)
-	}
-
-	*clearAll {
-		this.all.clear;
+		this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
 	}
 
 	*basicNew {| key |
 		^super.new
-		.prAdd( key )
+		.instVarPut( \name, key );
 	}
 
 	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
@@ -90,11 +69,6 @@ SPNImmediateTransition {
 
 	outputPlaces {| aBoolean = false |
 		^ this.prGetPlaces( outputPlaces, aBoolean );
-	}
-
-	prAdd {| argKey |
-		all.put( argKey, this );
-		this.instVarPut( \name, argKey );
 	}
 
 	prSetIfNotNil {| aSymbol, aCollection |
@@ -242,9 +216,9 @@ SPetriNet {
 
 	init {| dictionaries |
 		var transition, dependants;
-		places = List[];
-		transitions = List[];
-		transitionsB1 = IdentityDictionary[];
+		places = List [];
+		transitions = List [];
+		transitionsB1 = IdentityDictionary [];
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict );
 			transition = this.prAddTransition( aDict );
@@ -265,13 +239,12 @@ SPetriNet {
 	prAddTransition {| aDict |
 		var transition, transitionName, isTimed;
 		transitionName = aDict.at( \transition );
-		transition = SPNImmediateTransition.at( transitionName );
-		if( transition.isNil ){
-			isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
-			transition = [ SPNImmediateTransition, SPNTimedTransition ]
-			.at( isTimed.asInteger )
-			.basicNew( transitionName )
-		};
+
+		isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
+		transition = [ SPNImmediateTransition, SPNTimedTransition ]
+		.at( isTimed.asInteger )
+		.basicNew( transitionName );
+
 		this.prAddToList( transitions, transition );
 		^transition;
 	}

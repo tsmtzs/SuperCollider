@@ -3,7 +3,7 @@
 // by Peter Haas
 
 // Ex. 1.4 p.19
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[ PNPlace ].do {|a| a.clearAll }
 
 (
 a = SPetriNet(
@@ -57,7 +57,7 @@ a.setMarking( (\d1:2, \d2:0) )
 a.samplePathAlgorithm( 100, 0, \postCurrentState, *( true ! 7 ) )
 
 // Ex. 2.1 p.24
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[ PNPlace ].do {|a| a.clearAll }
 
 (
 a = SPetriNet(
@@ -209,7 +209,7 @@ Pdef(\e6,
 )
 
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -283,7 +283,7 @@ a.play;
 
 // Ex. 2.2 p.29
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -424,7 +424,7 @@ Pdef(\e4,
 
 // this is not the net from the example.
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -535,7 +535,7 @@ Pdef(\e6,
 )
 
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -642,7 +642,7 @@ a.play;
 
 
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -764,7 +764,7 @@ transitions.do {|aSymbol|
 (
 ~port = {| index, inputPlace |
 	var transition;
-	[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+	[ PNPlace ].do {|a| a.clearAll };
 
 	[
 		(
@@ -923,7 +923,7 @@ SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
 )
 
 
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[ PNPlace ].do {|a| a.clearAll }
 
 ~rings = 5;
 
@@ -1079,7 +1079,7 @@ transitions.do {|aSymbol|
 // Ex. 2.9 p.41
 
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -1232,7 +1232,7 @@ transitions.do {|aSymbol|
 // Ex. 2.10 p.44
 
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -1435,7 +1435,7 @@ transitions.do {|aSymbol|
 // Ex. 2.11 p.45
 
 (
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll };
+[ PNPlace ].do {|a| a.clearAll };
 
 a = SPetriNet(
 	(
@@ -1536,4 +1536,4 @@ transitions.do {|aSymbol|
 
 // Ex. 2.12 p.47
 
-[SPNImmediateTransition, PNPlace ].do {|a| a.clearAll }
+[ PNPlace ].do {|a| a.clearAll }
