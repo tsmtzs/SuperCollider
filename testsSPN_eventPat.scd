@@ -1,5 +1,5 @@
 //a net for tests
-[ PNPlace ].do {|a| a.clearAll }
+PNPlace.clearAll
 
 (
 a = SPetriNet(
@@ -27,7 +27,7 @@ a = SPetriNet(
 )
 )
 a.marking
-a.setMarking( (\p1:1, \p2:0, \p3: 0)  )
+a.setMarking( (\p1:1, \p2: 0, \p3: 0)  )
 
 
 (
@@ -39,7 +39,6 @@ a.addUniqueMethod( \show,
 	}
 )
 )
-a.show(\currentStateAsString).class
 a.currentStateAsString
 a.makeB1
 
@@ -90,7 +89,7 @@ File.delete(File.getcwd +/+ "test");
 // Adding sound objects to Transitions -- playing them in real Time
 
 (
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -113,13 +112,13 @@ a = SPetriNet(
 (
 m = SPNMediator( \sound );
 
-~t1 = a.transitions.at( 0 );
+~t1 = a.transitions.at( \t1 );
 ~t1.spnMediator_( m );
 ~t1.addDependant(\sound , Pdef(\t1, Pbind(\freq, 300, \dur, 1.0 ) ) );
 // ~t1.dependants.at(\sound).source = Pbind(\freq, 250, \dur, 0.5 );
 // ~t1.clock_({ 2.0 } );
 
-~t2 = a.transitions.at(1);
+~t2 = a.transitions.at(\t2);
 ~t2.spnMediator_( m );
 ~t2.addDependant(\sound ,
 	Pdef(\t2,
@@ -150,7 +149,7 @@ a.reset
 //////////////////////////////////////////////////////////////////////
 // Immediate transitions in real time
 (
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -187,13 +186,13 @@ a = SPetriNet(
 (
 m = SPNMediator( \sound );
 
-~t1 = a.transitions.at(0);
+~t1 = a.transitions.at(\t1);
 ~t1.spnMediator_( m );
 ~t1.addDependant(\sound , Pdef(\t1, Pbind(\freq, 300, \dur, 10.0 ) ) );
 // ~t1.dependants.at(\sound).source = Pbind(\freq, 250, \dur, 0.5 );
 // ~t1.clock_({ 2.0 } );
 
-~t2 = a.transitions.at(1);
+~t2 = a.transitions.at(\t2);
 ~t2.spnMediator_( m );
 ~t2.addDependant(\sound ,
 	Pdef(\t2,
@@ -206,10 +205,10 @@ m = SPNMediator( \sound );
 );
 // ~t2.clock_( { 1.15 } );
 
-~t3 = a.transitions.at(2);
+~t3 = a.transitions.at(\t3);
 ~t3.spnMediator_( m );
 
-~t4 = a.transitions.at(3);
+~t4 = a.transitions.at(\t4);
 ~t4.spnMediator_( m );
 ~t4.addDependant(\sound, Pdef(\t4, Pbind( \freq, 500, \dur, 0.1, \amp, 0.7)));
 )
@@ -256,14 +255,14 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 )
 
 (
-~updateFunction = {
-	var place = PNPlace(\p2);
+~updateFunction = { | places, aSPetriNet |
+	var place = aSPetriNet.places.at(\p2);
 	if ( place.tokens < 1 ){ place.addOneToken }
 }
 )
 
 (
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -373,7 +372,7 @@ a.setMarking(
 a.play;
 a.stop; s.sendMsg( "/n_free", ~synthID );
 a.reset
-PNPlace(\p2).tokens
+a.places.at(\p2).tokens
 a.marking
 
 a.samplePathAlgorithm(15, 0, \postCurrentState )
@@ -471,7 +470,7 @@ Pdef( \left,
 )
 
 (
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -700,7 +699,7 @@ SynthDef(\noise,{| out = 0, pan = 0.0, amp = 1.0, coef1 = 30.0, coef2 = 400.0, x
 (
 var components = 10;
 
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	*(
@@ -811,7 +810,7 @@ a.reset;
 // exaple using the kanban cell
 
 (
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 ~dur = 0.01;
 
@@ -857,12 +856,12 @@ a.play
 a.samplePathAlgorithm(1, 0, \postCurrentState )
 
 5.do {|i|
-	SPNTimedTransition( ( \outM ++ i ).asSymbol ).clock_( { 0.05.rrand(0.15) })
+	a.transitions.at( ( \outM ++ i ).asSymbol ).clock_( { 0.05.rrand(0.15) })
 }
 
 PNPlace(\p0).addOneToken
 
-SPNTimedTransition( \outM0 ).dependants.put(
+a.transitions.at( \outM0 ).dependants.put(
 	\sound, (\instrument: \default, \midinote: 60, \dur: 1, \amp: 0.4 )
 )
 
@@ -870,7 +869,7 @@ a.stop;
 
 //////////////////////////////////////////////////////////////////////
 (
-[  PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 ~dur = 0.01;
 ~kanbans = 20;
@@ -904,12 +903,12 @@ a.setMarking(
 a.play
 
 ~kanbans.do {|i|
-	SPNTimedTransition( ( \outM ++ i ).asSymbol ).clock_( { 0.01.rrand(0.02) })
+	a.transitions.at( ( \outM ++ i ).asSymbol ).clock_( { 0.01.rrand(0.02) })
 }
 
 PNPlace(\p0).addOneToken
 
-SPNTimedTransition( \outM0 ).dependants.put(
+a.transitions.at( \outM0 ).dependants.put(
 	\sound, (\instrument: \default, \midinote: 50, \dur: 1, \amp: 0.4 )
 )
 
@@ -918,9 +917,8 @@ a.stop;
 //////////////////////////////////////////////////////////////////////
 // use this to test parameter change in a node
 // add a global storage Environment in SPetriNet?
-
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(

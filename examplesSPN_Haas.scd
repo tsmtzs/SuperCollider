@@ -3,7 +3,7 @@
 // by Peter Haas
 
 // Ex. 1.4 p.19
-[ PNPlace ].do {|a| a.clearAll }
+PNPlace.clearAll
 
 (
 a = SPetriNet(
@@ -26,7 +26,7 @@ a = SPetriNet(
 
 (
 [\e1,\e2].do {|tran, i|
-	SPNImmediateTransition.at(tran)
+	a.transitions.at(tran)
 	.clock_( {
 		// 0.1.rrand(2.0)
 		[
@@ -41,7 +41,7 @@ p = 0.6;
 
 (
 var transition;
-transition = SPNImmediateTransition.at(\e1);
+transition = a.transitions.at(\e1);
 transition.updateOutputPlaces_( {
 	if( p.coin ){
 		transition.outputPlaces.do {|elem| elem.addOneToken }
@@ -57,7 +57,7 @@ a.setMarking( (\d1:2, \d2:0) )
 a.samplePathAlgorithm( 100, 0, \postCurrentState, *( true ! 7 ) )
 
 // Ex. 2.1 p.24
-[ PNPlace ].do {|a| a.clearAll }
+PNPlace.clearAll
 
 (
 a = SPetriNet(
@@ -118,10 +118,10 @@ b = (
 )
 
 (
-SPNImmediateTransition.at(\e1).clock_( b.a1 );
-SPNImmediateTransition.at(\e4).clock_( b.a2 );
-SPNImmediateTransition.at(\e3).clock_( b.l1 );
-SPNImmediateTransition.at(\e6).clock_( b.l2 );
+a.transitions.at(\e1).clock_( b.a1 );
+a.transitions.at(\e4).clock_( b.a2 );
+a.transitions.at(\e3).clock_( b.l1 );
+a.transitions.at(\e6).clock_( b.l2 );
 )
 
 // Each buffer contains at most bi tokens. When places \e1, \e4 are
@@ -129,7 +129,7 @@ SPNImmediateTransition.at(\e6).clock_( b.l2 );
 // then no item is created from transition \ei
 (
 var transition;
-transition = SPNImmediateTransition.at( \e1 );
+transition = a.transitions.at( \e1 );
 transition.updateOutputPlaces_( {
 	var tokens = 0;
 	tokens = 3.do {|j|
@@ -146,7 +146,7 @@ transition.updateOutputPlaces_( {
 
 (
 var transition;
-transition = SPNImmediateTransition.at( \e4 );
+transition = a.transitions.at( \e4 );
 transition.updateOutputPlaces_( {
 	var tokens = 0;
 	tokens = 3.do {|j|
@@ -209,7 +209,7 @@ Pdef(\e6,
 )
 
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -283,7 +283,7 @@ a.play;
 
 // Ex. 2.2 p.29
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -319,7 +319,7 @@ a = SPetriNet(
 
 (
 var transition;
-transition = SPNImmediateTransition.at( \e4 );
+transition = a.transitions.at( \e4 );
 transition.clock_( { ((5..10)/20).choose } );
 )
 
@@ -353,7 +353,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.collect {|aTrans| aTrans.name };
+transitions = a.transitions.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -424,7 +424,7 @@ Pdef(\e4,
 
 // this is not the net from the example.
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -535,7 +535,7 @@ Pdef(\e6,
 )
 
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -609,7 +609,6 @@ a.setMarking( (\d1: 1, \d2:0, \d3: 1, \d4:0, \d5: 1, \d6: 0 ) );
 
 a.play;
 
-
 // Ex. 2.3 p.30
 
 // In the current setting, when clockSpeed = 0 for a transition \e4, the only
@@ -642,7 +641,7 @@ a.play;
 
 
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -678,7 +677,7 @@ a = SPetriNet(
 
 (
 var transition;
-transition = SPNImmediateTransition.at(\e2);
+transition = a.transitions.at(\e2);
 transition.updateOutputPlaces_( {| outputPlaces, aPetriNet |
 	var p, d3Tokens;
 	d3Tokens = aPetriNet.marking.at(\d3);
@@ -694,14 +693,14 @@ transition.updateOutputPlaces_( {| outputPlaces, aPetriNet |
 
 (
 var transition;
-transition = SPNImmediateTransition.at(\e4);
+transition = a.transitions.at(\e4);
 transition.clock_({ [0.1,0.2].choose })
 )
 
 
 ~duration = 60;
 
-SPNImmediateTransition.at(\e4).inhibitorPlaces
+a.transitions.at(\e4).inhibitorPlaces
 
 a.setMarking( (\d1: 1, \d2: 0, \d3: 0, \d4: 0 ) )
 a.samplePathAlgorithm( 10, 0, \postCurrentState, *( true ! 7 ) )
@@ -731,7 +730,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.select {|aTrans| aTrans.isTimed }.collect {|aTrans| aTrans.name };
+transitions = a.transitions.select {|aTrans| aTrans.isTimed }.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -758,13 +757,12 @@ transitions.do {|aSymbol|
 ~score.stop
 
 // Ex. 2.6 p.33
-
 ~rings = 3;
 
 (
 ~port = {| index, inputPlace |
 	var transition;
-	[ PNPlace ].do {|a| a.clearAll };
+	PNPlace.clearAll;
 
 	[
 		(
@@ -808,7 +806,7 @@ a = SPetriNet( *( net ) )
 (
 var transition;
 ~rings.do {|i|
-	transition = SPNImmediateTransition.at( ( "e3" ++ i ).asSymbol);
+	transition = a.transitions.at( ( "e3" ++ i ).asSymbol);
 	transition.updateOutputPlaces_({| outputPlaces, aSPetriNet |
 		var d1Tokens;
 		d1Tokens = aSPetriNet.marking.at( ( "d1" ++ i ).asSymbol );
@@ -886,7 +884,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.select {|aTrans| aTrans.isTimed }.collect {|aTrans| aTrans.name };
+transitions = a.transitions.select {|aTrans| aTrans.isTimed }.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -923,7 +921,7 @@ SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
 )
 
 
-[ PNPlace ].do {|a| a.clearAll }
+PNPlace.clearAll
 
 ~rings = 5;
 
@@ -1050,7 +1048,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.select {|aTrans| aTrans.isTimed }.collect {|aTrans| aTrans.name };
+transitions = a.transitions.select {|aTrans| aTrans.isTimed }.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -1079,7 +1077,7 @@ transitions.do {|aSymbol|
 // Ex. 2.9 p.41
 
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -1143,7 +1141,7 @@ a = SPetriNet(
 (
 var transition;
 2.do {| i |
-	transition = SPNImmediateTransition.at( ("e" ++ (i+2)).asSymbol );
+	transition = a.transitions.at( ("e" ++ (i+2)).asSymbol );
 	transition.updateOutputPlaces_( ~updateFunction );
 };
 )
@@ -1152,7 +1150,7 @@ var transition;
 // partition of 3. See 'matters computational'
 (
 var transition;
-transition = SPNImmediateTransition.at(\e4);
+transition = a.transitions.at(\e4);
 transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 	var n1, n2;
 	n1 = 4.rand;
@@ -1167,9 +1165,9 @@ transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 // You have a problem in referencing the previous marking. Add an extra
 // instanse variable? something else?
 (
-SPNImmediateTransition.at(\e1).clock_( { 0.5.rrand(1.0) } );
-SPNImmediateTransition.at(\e2).clock_( { 0.5.rrand(1.0) } );
-SPNImmediateTransition.at(\e3).clock_( { 1.5.rrand(2.0) } );
+a.transitions.at(\e1).clock_( { 0.5.rrand(1.0) } );
+a.transitions.at(\e2).clock_( { 0.5.rrand(1.0) } );
+a.transitions.at(\e3).clock_( { 1.5.rrand(2.0) } );
 )
 
 (
@@ -1203,7 +1201,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.select {|aTrans| aTrans.isTimed }.collect {|aTrans| aTrans.name };
+transitions = a.transitions.select {|aTrans| aTrans.isTimed }.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -1230,9 +1228,8 @@ transitions.do {|aSymbol|
 ~score.stop
 
 // Ex. 2.10 p.44
-
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -1310,7 +1307,7 @@ a = SPetriNet(
 
 (
 var transition;
-transition = SPNImmediateTransition.at(\e3);
+transition = a.transitions.at(\e3);
 transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 	var n1, n2;
 	n1 = 4.rand;
@@ -1341,29 +1338,29 @@ transition.updateOutputPlaces_( {| outputPlaces, aSPetriNet |
 (
 var transition;
 [ \e212, \e222, \e223 ].do {| aSymbol |
-	transition = SPNImmediateTransition.at( aSymbol );
+	transition = a.transitions.at( aSymbol );
 	transition.updateOutputPlaces_( ~updateFunction );
 };
 )
 
 (
-SPNImmediateTransition.at(\e211).clock_( { 0.5 } );
-SPNImmediateTransition.at(\e212).clock_( { 0.75 } );
-SPNImmediateTransition.at(\e221).clock_( { 1.0 } );
-SPNImmediateTransition.at(\e222).clock_( { 1.25 } );
-SPNImmediateTransition.at(\e223).clock_( { 0.25 } );
+a.transitions.at(\e211).clock_( { 0.5 } );
+a.transitions.at(\e212).clock_( { 0.75 } );
+a.transitions.at(\e221).clock_( { 1.0 } );
+a.transitions.at(\e222).clock_( { 1.25 } );
+a.transitions.at(\e223).clock_( { 0.25 } );
 )
 
 (
 [\e111,\e121].do {|aSymbol|
-	SPNImmediateTransition.at( aSymbol ).updateInputPlaces_( {| inputPlaces, aSPN |
+	a.transitions.at( aSymbol ).updateInputPlaces_( {| inputPlaces, aSPN |
 		inputPlaces.select {| aPlace | aPlace.name == \d31 }
 		.do {| aPlace | aPlace.removeOneToken };
 	})
 };
 
 [\e112,\e122].do {|aSymbol|
-	SPNImmediateTransition.at( aSymbol ).updateInputPlaces_( {| inputPlaces, aSPN |
+	a.transitions.at( aSymbol ).updateInputPlaces_( {| inputPlaces, aSPN |
 		inputPlaces.select {| aPlace | aPlace.name == \d32 }
 		.do {| aPlace | aPlace.removeOneToken };
 	})
@@ -1406,7 +1403,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.select {|aTrans| aTrans.isTimed }.collect {|aTrans| aTrans.name };
+transitions = a.transitions.select {|aTrans| aTrans.isTimed }.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -1433,9 +1430,8 @@ transitions.do {|aSymbol|
 ~score.stop
 
 // Ex. 2.11 p.45
-
 (
-[ PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = SPetriNet(
 	(
@@ -1508,7 +1504,7 @@ var transitions, offset = 0.5, note, durList, aPetriNet, amp = 0.2;
 
 aPetriNet = a;
 
-transitions = a.transitions.select {|aTrans| aTrans.isTimed }.collect {|aTrans| aTrans.name };
+transitions = a.transitions.select {|aTrans| aTrans.isTimed }.keys;
 
 transitions.do {|aSymbol|
 	durList = aPetriNet.timeDurPairs.at( aSymbol );
@@ -1535,5 +1531,4 @@ transitions.do {|aSymbol|
 ~score.stop
 
 // Ex. 2.12 p.47
-
-[ PNPlace ].do {|a| a.clearAll }
+PNPlace.clearAll

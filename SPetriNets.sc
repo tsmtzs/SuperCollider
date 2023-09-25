@@ -207,17 +207,10 @@ SPetriNet {
 		^ super.new.init( dictionaries );
 	}
 
-	mediator_ {| aSPNMediator |
-		mediator = aSPNMediator;
-		this.transitions.do {| aSPNTransition |
-			aSPNTransition.spnMediator_( mediator );
-		};
-	}
-
 	init {| dictionaries |
 		var transition, dependants;
-		places = List [];
-		transitions = List [];
+		places = IdentityDictionary [];
+		transitions = IdentityDictionary [];
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict );
 			transition = this.prAddTransition( aDict );
@@ -235,23 +228,6 @@ SPetriNet {
 		}
 	}
 
-	prAddTransition {| aDict |
-		var transition, transitionName, isTimed;
-		transitionName = aDict.at( \transition );
-
-		isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
-		transition = [ SPNImmediateTransition, SPNTimedTransition ]
-		.at( isTimed.asInteger )
-		.basicNew( transitionName );
-
-		this.prAddToList( transitions, transition );
-		^transition;
-	}
-
-	prAddToList {| aList, anObject |
-		if( aList.includes( anObject ).not ){ aList.add( anObject ); }
-	}
-
 	prAddPlaces {| aDict |
 		[ \inputPlaces, \inhibitorPlaces, \outputPlaces ].do { | aSymbol|
 			this.prAddPlacesBasic( aDict.at( aSymbol ) );
@@ -261,28 +237,43 @@ SPetriNet {
 	prAddPlacesBasic {| anArray |
 		var place;
 		anArray.do {| aSymbol |
-			place = PNPlace.at( aSymbol );
-			if( place.isNil ){
-				place = PNPlace.new( aSymbol );
-			};
-			this.prAddToList( places, place );
+			place = PNPlace( aSymbol );
+			this.prAddToDictionary( places, place );
+		};
+	}
+
+	prAddToDictionary {| aDictionary, anObject |
+		if( aDictionary.includes( anObject ).not ){
+			aDictionary.put( anObject.name, anObject );
+		}
+	}
+
+	prAddTransition {| aDict |
+		var transition, transitionName, isTimed;
+		transitionName = aDict.at( \transition );
+
+		isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
+		transition = [ SPNImmediateTransition, SPNTimedTransition ]
+		.at( isTimed.asInteger )
+		.basicNew( transitionName );
+
+		this.prAddToDictionary( transitions, transition );
+		^transition;
+	}
+
+	mediator_ {| aSPNMediator |
+		mediator = aSPNMediator;
+		this.transitions.do {| aSPNTransition |
+			aSPNTransition.spnMediator_( mediator );
 		};
 	}
 
 	marking {
-		^ this.prCollectAsEvent( places, \name, \tokens )
+		^ this.places.collect { |aPNPlace| aPNPlace.tokens }
 	}
 
 	clockReadings {
-		^ this.prCollectAsEvent( transitions, \name, \clockReading )
-	}
-
-	prCollectAsEvent {| aCollection, aSelectorA, aSelectorB |
-		^ aCollection.collect {| anObject |
-			[ anObject.perform( aSelectorA ), anObject.perform( aSelectorB ) ]
-		}
-		.flatten
-		.as(Event)
+		^ this.transitions.collect { |aSPNTransition| aSPNTransition.clockReading }
 	}
 
 	makeB1 {
@@ -303,14 +294,10 @@ SPetriNet {
 
 	setMarking {| anIdentityDictionary |
 		anIdentityDictionary.keysValuesDo {| key, value |
-			// change the boolean test in 'if' with the return value of a method
-			// from a class named SPNUtilities? This class will have as methods all
-			// the private methods of PNPlace, SPNImmediateTransition.
-			// Specifically, for this method you use the method 'prGetPlaces'
-			if( places.collect {| place | place.name }.includes( key ).not){
+			if( places.keys.includes( key ).not){
 				^ ("Petri net, doesn't have place" + key.asString).error;
 			};
-			PNPlace( key, value );
+			this.places.at(key).tokens_(value);
 		};
 	}
 
@@ -567,7 +554,7 @@ SPetriNet {
 
 	initTimeDurPairs {
 		timeDurPairs ?? {
-			timeDurPairs = transitions.collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );//or Event?
+			timeDurPairs = transitions.collect { List [] };
 			// keep only timed transitions?
 			// timeDurPairs = transitions.select {|trans| trans.isTimed}
 			// .collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );
