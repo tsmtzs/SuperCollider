@@ -153,10 +153,10 @@
 (
 var assemblyDonePlace, assemblyOnTrans, rOffPlace, startAssemblyTrans, clockT1, t1Source, clockT2, t2Source, clockT3, t3Source, t4Source, clockT5, t5Source;
 
-[ PNTimedTransitionN, PNPlaceN ].do {|a| a.clearAll };
+[ PNTimedTransitionN, PNPlace ].do {|a| a.clearAll };
 
-assemblyDonePlace = PNPlaceN( \done, 1 );
-rOffPlace = PNPlaceN( \rOff, 1 );
+assemblyDonePlace = PNPlace( \done, 1 );
+rOffPlace = PNPlace( \rOff, 1 );
 startAssemblyTrans = PNTimedTransitionN( \startAssembly );
 assemblyOnTrans = PNTimedTransitionN( \assemblyOnTrans );
 
@@ -210,7 +210,6 @@ p.play
 //////////////////////////////////////////////////////////////////////
 // Basic pull control system
 //////////////////////////////////////////////////////////////////////
-
 (
 ~bpcs = {| index = 0, startDeliveryPlace, demandsPlace, demandsClock = 1, demandsSource, machine1Clock = 1, machine1Source, k1 = 1, machine2Clock = 1, machine2Source, k2 = 1, assemblySource, machine3Clock = 1, machine3Source, k3 = 1, deliveryDestPlace, deliverySource |
 	[
@@ -269,7 +268,6 @@ p.play
 //////////////////////////////////////////////////////////////////////
 // Simultaneous kanban control system
 //////////////////////////////////////////////////////////////////////
-
 (
 ~skcs = {| index = 0, demandsPlace, demandsClock = 1, demandsSource, machine1Clock = 1, machine1Source, k1 = 1, machine2Clock = 1, machine2Source, k2 = 1, assemblySource, machine3Clock = 1, machine3Source, k3 = 1, deliveryDestPlace, deliverySource |
 

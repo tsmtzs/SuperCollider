@@ -1,138 +1,40 @@
 // $LastChangedDate$
 // $Rev$
-SPNPlace {
-	classvar <>all;
-	var <tokens, <>name;
-	var <isInhibitorPlaceTo, <isInputPlaceTo, <isOutputPlaceTo;//arrays of Transitions
-
-	*initClass {
-		all = IdentityDictionary.new;
-	}
-
-	//methods *new, *at and prAdd from Pdef
-
-	// global storage
-	*at { arg key;
-		^this.all.at(key)
-	}
-
-	*new {| key, anInteger |
-		var place;
-		place = this.at( key );
-		if( place.isNil){
-			place = super.newCopyArgs( anInteger ?? { 0 } ).prAdd( key ).init;
-		}{
-			if( anInteger.notNil ){ place.tokens_( anInteger ) };
-		}
-		^place
-	}
-
-	*clearAll {
-		this.all.clear;
-	}
-
-	init {
-		isInputPlaceTo = List[];
-		isInhibitorPlaceTo = List[];
-		isOutputPlaceTo = List[];
-	}
-
-	prAdd {| argKey |
-		all.put( argKey, this );
-		name = argKey;
-	}
-
-	tokens_ { | anInteger |
-		this.warning( anInteger );
-		tokens = anInteger;
-	}
-
-	addOneToken { tokens = tokens + 1 }
-
-	removeOneToken { tokens = tokens - 1 }//allow negative number of tokens
-
-	addTokens { | anInteger |
-		this.warning( anInteger );
-		tokens = tokens + anInteger;
-	}
-
-	removeTokens { | anInteger |
-		this.warning( anInteger );
-		tokens = tokens - anInteger;
-	}
-
-	isEmpty { ^ tokens == 0 }
-
-	gui {| aWindow | }
-
-	printOn { arg stream;
-		stream << this.class.name << "( "<< name <<" , " << tokens  << " )";
-	}
-
-	// Modify method warning so that it can print or not the message?
-	warning {| anObject |
-		if( anObject.isKindOf( Integer ).not ){
-			("\nPlace"+this.name.asString+anObject.asString + "is not an integer").warn
-		};
-	}
-}
 
 SPNImmediateTransition {
-	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
-	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of SPNPlace instances or names of SPNPlaces
+	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>clockSpeed, <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
-	var <>name, <>spnMediator;
+	var <name, <>spnMediator;
 	var <clock = 0, <>clockReading; // clock is a function with first arg a SPetriNet, and clockReading is a value of this function
 	var <currentState;				// put this var in subclass SPNTimedTransition only?
 
-	*initClass{
-		all = IdentityDictionary.new;
-		updateInputPlacesDefault  = {| aSet | { aSet.do { |elem| elem.removeOneToken } } };
-		updateOutputPlacesDefault = {| aSet | { aSet.do { |elem| elem.addOneToken } } };
+	*initClass {
+		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
+		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
 			//transition is enabled when all input places contain at least one token
 			//and all inhibitor places contain no tokens. The message asCollection added
 			//to prevent nil sets of places
-			inputPlaces.asCollection.collect{ |elem| elem.tokens != 0 }.includes( false ).not
-			//		 inputPlaces.asCollection.collect{ |elem| elem.tokens > 0 }.includes( false ).not // if tokens is positive integer
+			inputPlaces.asCollection.every{ |elem| elem.tokens !== 0 }
 			and:
-			{ inhibitorPlaces.asCollection.collect{ |elem| elem.tokens == 0 }.includes( false ).not }
+			{ inhibitorPlaces.asCollection.every { |elem| elem.tokens === 0 } }
 		};
 		clockSpeedDefault = 1;
 	}
 
 	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
-		var transition;
-		transition = this.at( key );
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
-			^("There are  common Places in InputPlaces and InhibitorPlaces of transition"+key.asString).error;
+			^("There are  common Places in InputPlaces and InhibitorPlaces of transition" + key.asString).error;
 		};
-		if( transition.isNil ){
-			transition = this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
-		}{
-			if(
-				[ inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed ].any {| elem | elem.notNil }
-			){
-				transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
-			}
-		}
-		^transition
-	}
 
-	// global storage
-	*at { arg key;
-		^this.all.at(key)
-	}
-
-	*clearAll {
-		this.all.clear;
+		this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
 	}
 
 	*basicNew {| key |
 		^super.new
-		.prAdd( key )
+		.instVarPut( \name, key );
 	}
 
 	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
@@ -142,8 +44,7 @@ SPNImmediateTransition {
 		.updateInputPlaces_( updateInputPlaces ?? { updateInputPlacesDefault.( this.inputPlaces ) }  )
 		.updateOutputPlaces_( updateOutputPlaces ?? { updateOutputPlacesDefault.( this.outputPlaces ) } )
 		.enabledFunction_( enabledFunction ?? { enabledFunctionDefault } )
-		.clockSpeed_( clockSpeed ?? { clockSpeedDefault } )
-		.informPlaces;
+		.clockSpeed_( clockSpeed ?? { clockSpeedDefault } );
 	}
 
 	inputPlaces_ {| inputPlacesSet |
@@ -170,11 +71,6 @@ SPNImmediateTransition {
 		^ this.prGetPlaces( outputPlaces, aBoolean );
 	}
 
-	prAdd {| argKey |
-		all.put( argKey, this );
-		this.instVarPut( \name, argKey );
-	}
-
 	prSetIfNotNil {| aSymbol, aCollection |
 		if( aCollection.notNil ){
 			this.instVarPut( aSymbol , this.prCollectPlaceInstances( aCollection ) )
@@ -185,8 +81,8 @@ SPNImmediateTransition {
 		var place;
 		^ aCollection.collect {| elem |
 			if( elem.isKindOf( Symbol ) ){
-				place = SPNPlace.at( elem );
-				if( place.isNil ){ place = SPNPlace( elem ); };
+				place = PNPlace.at( elem );
+				if( place.isNil ){ place = PNPlace( elem ); };
 				place
 			}{
 				elem
@@ -195,20 +91,12 @@ SPNImmediateTransition {
 	}
 
 	prGetPlaces {| aCollection, aBoolean = false |
-		// aBoolean: if true, get symbols, otherwise get SPNPlace instances
+		// aBoolean: if true, get symbols, otherwise get PNPlace instances
 		^ if( aBoolean ){
 			aCollection.collect {| elem | elem.name }
 		}{
 			aCollection
 		}
-	}
-
-	// modify this method to avoid duplicate writings
-	informPlaces {
-		var instanceName = this.name;
-		this.inputPlaces( false ).do {| place | place.isInputPlaceTo.add( instanceName ) };
-		this.outputPlaces( false ).do {| place | place.isOutputPlaceTo.add( instanceName ) };
-		this.inhibitorPlaces( false ).do {| place | place.isInhibitorPlaceTo.add( instanceName ) };
 	}
 
 	fire {| aSPetriNet |
@@ -230,7 +118,7 @@ SPNImmediateTransition {
 
 	gui { | aWindow | }
 
-	printOn { arg stream;
+	printOn { | stream |
 		stream << this.class.name << "( "<< this.name << " )";
 	}
 
@@ -261,7 +149,7 @@ SPNImmediateTransition {
 		theDependants = dependantsDictionary.at(this);
 		if (theDependants.notNil, {
 			theDependants.removeAt( key );
-			if (theDependants.size == 0, {
+			if (theDependants.size === 0, {
 				dependantsDictionary.removeAt(this);
 			});
 		});
@@ -306,87 +194,34 @@ SPNTimedTransition : SPNImmediateTransition {
 }
 
 SPetriNet {
-	classvar <>all;						// remove this classvar end the methods 'at', 'clearAll'?
-	var <places, <transitions, firingTransitions, oldTransitions, transitionsB1;
+	var <places, <transitions, firingTransitions, oldTransitions;
 	var newTransitions, immediateTransitions, enabledTransitions, unionOfB1;
 	var <currentTime, <>timeOffset, <holdingTime;
-	var <>name, <timeDurPairs, <task, <mediator;
-
-	*initClass {
-		all = IdentityDictionary.new;
-	}
-
-	*clearAll {
-		this.all.clear;
-	}
+	var <timeDurPairs, <task, <mediator;
 
 	// Each argument corresponds to one transition and is an IdentityDictionary with keys:
 	// \transition : name, \inputPlaces: setOfPlaceNames or nil, \outputPlaces: setOfOutputNames or nil,
 	// \inhibitorPlaces: setOfInhibitorPlaces or nil, \updateInputPlaces: aFunction(optional),
 	// \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
-	*new {| key ... dictionaries |
-		var petriNet;
-		petriNet = this.at( key );
-		if( petriNet.isNil ){
-			petriNet = super.new.prAdd( key ).init( dictionaries );
-		}{
-			if( dictionaries.notNil ){
-				petriNet.init( dictionaries )
-			}
-		};
-		^petriNet
-	}
-
-	mediator_ {| aSPNMediator |
-		mediator = aSPNMediator;
-		this.transitions.do {| aSPNTransition |
-			aSPNTransition.spnMediator_( mediator );
-		};
+	*new {| ...dictionaries |
+		^ super.new.init( dictionaries ).makeB1;
 	}
 
 	init {| dictionaries |
 		var transition, dependants;
-		places = List[];
-		transitions = List[];
-		transitionsB1 = IdentityDictionary[];
+		places = IdentityDictionary [];
+		transitions = IdentityDictionary [];
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict );
 			transition = this.prAddTransition( aDict );
-			[ \isTimed, \transition].do {| aSymbol | // insert this 3 lines in method 'prAddTransition?
-				aDict.removeAt( aSymbol );
-			};
 			dependants = aDict.at( \dependants );
 			if( dependants.notNil ){
 				dependants.keysValuesDo {| key, val |
 					transition.addDependant( key, val )
 				};
-				aDict.removeAt( \dependants );
 			};
 			transition.performWithEnvir( \init, aDict );
 		}
-	}
-
-	*at { arg key;
-		^this.all.at(key)
-	}
-
-	prAdd {| argKey |
-		all.put( argKey, this );
-		name = argKey;
-	}
-
-	prAddTransition {| aDict |
-		var transition, transitionName, isTimed;
-		transitionName = aDict.at( \transition );
-		transition = SPNImmediateTransition.at( transitionName );
-		if( transition.isNil ){
-			isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
-			transition = [ SPNImmediateTransition, SPNTimedTransition ]
-			.at( isTimed.asInteger )
-			.basicNew( transitionName )
-		};
-		this.prAddToList( transitions, transition );
-		^transition;
 	}
 
 	prAddPlaces {| aDict |
@@ -398,66 +233,68 @@ SPetriNet {
 	prAddPlacesBasic {| anArray |
 		var place;
 		anArray.do {| aSymbol |
-			place = SPNPlace.at( aSymbol );
-			if( place.isNil ){
-				place = SPNPlace.new( aSymbol );
-			};
-			this.prAddToList( places, place );
+			place = PNPlace( aSymbol );
+			this.prAddToDictionary( places, place );
 		};
 	}
 
-	prAddToList {| aList, anObject |
-		if( aList.includes( anObject ).not ){ aList.add( anObject ); }
+	prAddToDictionary {| aDictionary, anObject |
+		if( aDictionary.includes( anObject ).not ){
+			aDictionary.put( anObject.name, anObject );
+		}
+	}
+
+	prAddTransition {| aDict |
+		var transition, transitionName, isTimed;
+		transitionName = aDict.at( \transition );
+
+		isTimed = aDict.at( \clock ).isNil.not or: { aDict.trueAt( \isTimed ) }; // notNil for isNil.not
+		transition = [ SPNImmediateTransition, SPNTimedTransition ]
+		.at( isTimed.asInteger )
+		.basicNew( transitionName );
+
+		this.prAddToDictionary( transitions, transition );
+		^transition;
+	}
+
+	mediator_ {| aSPNMediator |
+		mediator = aSPNMediator;
+		this.transitions.do {| aSPNTransition |
+			aSPNTransition.spnMediator_( mediator );
+		};
 	}
 
 	marking {
-		^ this.prCollectAsEvent( places, \name, \tokens )
+		^ this.places.collect { |aPNPlace| aPNPlace.tokens }
 	}
 
 	clockReadings {
-		^ this.prCollectAsEvent( transitions, \name, \clockReading )
+		^ this.transitions.collect { |aSPNTransition| aSPNTransition.clockReading }
 	}
 
-	prCollectAsEvent {| aCollection, aSelectorA, aSelectorB |
-		^ aCollection.collect {| anObject |
-			[ anObject.perform( aSelectorA ), anObject.perform( aSelectorB ) ]
-		}
-		.flatten
-		.as(Event)
-	}
-
-	// delete instance variable 'transitionsB1' ?
 	makeB1 {
 		var transName;
-		unionOfB1 = Set[];
+		unionOfB1 = Set [];
 		transitions.do {| transition |
 			transName = transition.name;
-			// transitionsB1.put( transName, [] );
 			transitions.do {| trans |
 				if(
 					(transition.outputPlaces.as(Set) & trans.inputPlaces.as(Set) ).isEmpty.not
 					or:
 					{(transition.inputPlaces.as(Set) & trans.inhibitorPlaces.as(Set) ).isEmpty.not} ){
-						// transitionsB1.at( transName ).add( trans );
 						unionOfB1.add( trans );
 					};
 			};
 		};
-		// unionOfB1 = transitionsB1.inject( Set[], _.union( _ ) );//change method with reduce
 	}
 
 	setMarking {| anIdentityDictionary |
 		anIdentityDictionary.keysValuesDo {| key, value |
-			// change the boolean test in 'if' with the return value of a method
-			// from a class named SPNUtilities? This class will haave as methods all
-			// the private methods of SPNPlace, SPNImmediateTransition.
-			// Specifically, for this method you use the method 'prGetPlaces'
-			if( places.collect {| place | place.name }.includes( key ).not){
-				^ ("Petri net"+this.name.asString+", doesn't have place"+key.asString).error;
+			if( places.keys.includes( key ).not){
+				^ ("Petri net, doesn't have place" + key.asString).error;
 			};
-			SPNPlace( key, value );
+			this.places.at(key).tokens_(value);
 		};
-		^ Post<<"The new marking is\n\t "<<this.marking<<"\n";
 	}
 
 	//the algorithm to generate a sample for the underlying process of the SPetriNet
@@ -465,9 +302,9 @@ SPetriNet {
 	//step 1:
 	computeInitEnabledTransitions {
 		currentTime = 0;//timeOffset
-		enabledTransitions = Set[];
-		oldTransitions = Set[];
-		newTransitions = Set[];			// remove this line? dublicates with the last line
+		enabledTransitions = Set [];
+		oldTransitions = Set [];
+		newTransitions = Set [];			// remove this line? dublicates with the last line
 		transitions.do {| e |
 			if( e.isEnabled ){
 				enabledTransitions.add( e );
@@ -481,11 +318,11 @@ SPetriNet {
 	//step 2:
 	computeFiringTransitions {
 		if( enabledTransitions.isEmpty ){
-			^ Error("There are no enabled transitions in petri net"+this.name.asString).throw;
+			^ Error("There are no enabled transitions in this petri net.").throw;
 		};
 		holdingTime = enabledTransitions.collect{|e| e.clockReading }.minItem;
 		firingTransitions = enabledTransitions.select {|e|
-			e.clockReading == holdingTime;
+			e.clockReading === holdingTime;
 		};
 	}
 	//step 3:
@@ -551,7 +388,7 @@ SPetriNet {
 				string = string ++ stateName ++":" + stateValue.asString ++ "\n\t"
 			};
 		};
-		^ string+"\n"
+		^ string + "\n"
 	}
 
 	samplePathAlgorithm {| dur = 5, startTime = 0, aSelector ...moreArgs |
@@ -563,7 +400,7 @@ SPetriNet {
 		this.prSamplePathsBasic( startTime );
 		//	this.prSamplePathsWithPerform( startTime, \value ); // use this line and delete method 'prSamplePathsBasic' ?
 
-		("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
+		("First firing after time" + startTime.asString + "occured at time" + currentTime.asString).postln;
 
 		this.prSamplePathsWithPerform( endTime, aSelector, *moreArgs );
 	}
@@ -595,8 +432,6 @@ SPetriNet {
 		var trans;
 		trans = transitions.as(Set);
 		task = Task({
-			"Please set the initial marking. Then call 'play'.".postln;
-			nil.yield;
 			this.computeInitEnabledTransitions;
 
 			loop {
@@ -708,12 +543,12 @@ SPetriNet {
 	}
 
 	postCurrentState{ |showCurrentTime = true, showMarking = true, showOldTransitions = true, showNewTransitions = true, showFiringTransitions = true, showClockReadings = true,  showHoldingTime = true |
-		Post<<this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings, showHoldingTime );
+		Post << this.currentStateAsString( showCurrentTime, showMarking, showOldTransitions, showNewTransitions, showFiringTransitions, showClockReadings, showHoldingTime );
 	}
 
 	initTimeDurPairs {
 		timeDurPairs ?? {
-			timeDurPairs = transitions.collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );//or Event?
+			timeDurPairs = transitions.collect { List [] };
 			// keep only timed transitions?
 			// timeDurPairs = transitions.select {|trans| trans.isTimed}
 			// .collect {|trans| trans.name }.collectAs( {|aSymbol| aSymbol -> List[] }, IdentityDictionary );

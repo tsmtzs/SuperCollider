@@ -1,72 +1,5 @@
 // $LastChangedDate$
 // $Rev$
-PNPlaceN {
-	classvar <>all;
-	var  <>name, <tokens;
-
-	*initClass {
-		all = IdentityDictionary.new;
-	}
-
-	*at {| key |
-		^this.all.at( key )
-	}
-
-	*new {| key, anInteger |
-		var place;
-		place = this.at( key );
-		if( place.isNil ){
-			place = super.newCopyArgs( key, anInteger ?? { 0 } ).store;
-		}{
-			if( anInteger.notNil ){ place.tokens_( anInteger ) }
-		};
-		^ place
-	}
-
-	*clearAll { this.all.clear }
-
-	store {
-		all.put( name, this );
-	}
-
-	tokens_ { | anInteger |
-		this.warn( anInteger );		// remove this line?
-		tokens = anInteger;
-	}
-
-	addOneToken { tokens = tokens + 1 }
-
-	removeOneToken { tokens = 0.max(tokens - 1) }
-
-	addTokens { | anInteger |
-		this.warn( anInteger );
-		tokens = tokens + anInteger;
-	}
-
-	removeTokens { | anInteger |
-		// this.warn( anInteger );
-		// tokens = tokens - anInteger;
-		this.addTokens( -1 * anInteger );
-	}
-
-	isEmpty { ^ tokens == 0 }
-
-	gui {| aWindow | }
-
-	printOn { arg stream;
-		stream << this.class.name << "( " << name <<" , " << tokens  << " )";
-	}
-
-// Modify method warning so that it can print or not the message?
-	warn {| anObject |
-		if( anObject.isKindOf( Integer ).not ){
-			("\nThe number" + anObject.asString + "is not an integer").warn
-		};
-	}
-
-	isTransition { ^false }
-	isPlace { ^true }
-}
 
 // look again instance method 'pnEnvironment'
 // discriminate between places and transitions?
@@ -77,7 +10,7 @@ PNPlaceN {
 PNTransitionN {
 	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
-	var  <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlaceN instances or names of PNPlaceNs
+	var  <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 	var <>source;
@@ -114,7 +47,7 @@ PNTransitionN {
 			transition = this.basicNew( name )
 			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
 			.source_( source )
-			.store;
+			.prAdd;
 		}{
 			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
 			.source_( source );
@@ -128,7 +61,7 @@ PNTransitionN {
 	}
 
 
-	store { all.put( name, this ) }
+	prAdd { all.put( name, this ) }
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
@@ -161,8 +94,8 @@ PNTransitionN {
 	// 	var place;
 	// 	^ aCollection.collect {| elem |
 	// 		if( elem.isKindOf( Symbol ) ){ // modify to pass tokens after name e.x [ \p0, 10, \p1, \p2]
-	// 			place = PNPlaceN.at( elem );
-	// 			if( place.isNil ){ place = PNPlaceN( elem ); };
+	// 			place = PNPlace.at( elem );
+	// 			if( place.isNil ){ place = PNPlace( elem ); };
 	// 			place
 	// 		}{
 	// 			// check for other objects?
@@ -181,11 +114,11 @@ PNTransitionN {
 		}{
 			# aSymbol, tokens = aCollection.copyRange( i, i + 1 );
 			if ( tokens.isKindOf( SimpleNumber ) ){
-				instList.add( PNPlaceN( aSymbol, tokens ) );
+				instList.add( PNPlace( aSymbol, tokens ) );
 				i = i + 2;
 			}{
-				// check here if aSymbol is a PNPlaceN or a Symbol
-				instList.add( PNPlaceN( aSymbol ) );
+				// check here if aSymbol is a PNPlace or a Symbol
+				instList.add( PNPlace( aSymbol ) );
 				i = i + 1;
 			}
 		}
@@ -193,7 +126,7 @@ PNTransitionN {
 	}
 
 	prGetPlaces {| aCollection, aBoolean = false |
-		// aBoolean: if true, get symbols, otherwise get SPNPlace instances
+		// aBoolean: if true, get symbols, otherwise get PNPlace instances
 		^ if( aBoolean ){
 			aCollection.collect {| elem | elem.name }
 		}{

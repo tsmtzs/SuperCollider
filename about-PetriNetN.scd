@@ -25,7 +25,7 @@
 // *. Wikipedia contributors. (2023, September 2). Petri net. In Wikipedia, The Free Encyclopedia. Retrieved 05:39, September 9, 2023, from https://en.wikipedia.org/w/index.php?title=Petri_net&oldid=1173376221
 
 (
-[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+[ PNPlace, PNTransitionN ].do (_.clearAll);
 
 ~net = PetriNetN(
 	(
@@ -105,7 +105,7 @@
 // For each transition you can change the number of tokens that it adds to each output place
 // when it fires. For this assign a function to the 'updateOutputPlaces' instance variable of the transition.
 // E.x. when transition \t7 fires, add three tokens to each output place:
-~net[\t7].updateInputPlaces_({ | aSet | aSet.do { | aPlace | aPlace.addTokens(3) }); // aSet: The Set of output places
+~net[\t7].updateInputPlaces_({ | aSet | aSet.do { | aPlace | aPlace.addTokens(3) } }); // aSet: The Set of output places
 
 ~net.setMarking((p1: 1, p2: 0, p3: 1, p4: 1, p5: 0, p6: 0, p7: 0));
 
@@ -157,7 +157,7 @@ Pbind(
 // For example, the next network is a modification of the above one:
 
 (
-[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+[ PNPlace, PNTransitionN ].do (_.clearAll);
 
 ~net = PetriNetN(
 	(
@@ -228,7 +228,7 @@ Pbind(
 // Timed transitions
 // //////////////////////////////////////////////////
 (
-[ PNPlaceN, PNTransitionN ].do (_.clearAll);
+[ PNPlace, PNTransitionN ].do (_.clearAll);
 
 ~net = PetriNetN(
 	(
