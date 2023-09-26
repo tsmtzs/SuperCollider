@@ -3,9 +3,9 @@
 // by Peter Haas
 
 // Ex. 1.4 p.19
-PNPlace.clearAll
-
 (
+PNPlace.clearAll;
+
 a = SPetriNet(
 	(
 		\transition: \e1,
@@ -57,9 +57,9 @@ a.setMarking( (\d1:2, \d2:0) )
 a.samplePathAlgorithm( 100, 0, \postCurrentState, *( true ! 7 ) )
 
 // Ex. 2.1 p.24
-PNPlace.clearAll
-
 (
+PNPlace.clearAll;
+
 a = SPetriNet(
 	(
 		\transition: \e1,
@@ -273,12 +273,10 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-a.makeB1;
 a.prTask;
 )
 
 a.setMarking( (\d1: 1, \d2:2, \d3: 0, \d4:1, \d5:0, \d6:0, \d7:1) );
-
 a.play;
 
 // Ex. 2.2 p.29
@@ -470,7 +468,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-a.makeB1;
 a.prTask;
 )
 
@@ -601,7 +598,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-a.makeB1;
 a.prTask;
 )
 
@@ -638,8 +634,6 @@ a.play;
 
 // maybe discriminate between timed and immediate transitions of SPetriNet
 // with additional instance variables?
-
-
 (
 PNPlace.clearAll;
 

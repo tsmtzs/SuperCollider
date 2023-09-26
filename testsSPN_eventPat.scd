@@ -1,7 +1,7 @@
 //a net for tests
-PNPlace.clearAll
-
 (
+PNPlace.clearAll;
+
 a = SPetriNet(
 	(
 		\transition: \t1,
@@ -40,7 +40,6 @@ a.addUniqueMethod( \show,
 )
 )
 a.currentStateAsString
-a.makeB1
 
 (
 a.removeUniqueMethod( \putCurrentStateToFile );
@@ -54,7 +53,6 @@ a.addUniqueMethod(\putCurrentStateToFile, {
 );
 )
 
-a.makeB1
 f = File(File.getcwd +/+ "test", "w" )
 a.putCurrentStateToFile( f, showMarking: true, showClockReadings: true )
 a.putCurrentStateToFile( f )
@@ -64,7 +62,6 @@ a.removeUniqueMethod(\samplePathAlgorithm);
 a.addUniqueMethod(\samplePathAlgorithm,{| inst, dur = 5, startTime = 0, aSelector ...moreArgs |
 	var endTime;
 	endTime = startTime + dur;
-	// unionOfB1.isNill ?? { inst.makeB1 };
 	inst.computeInitEnabledTransitions;
 
 	inst.prSamplePathsBasic( startTime );
@@ -136,7 +133,6 @@ m = SPNMediator( \sound );
 // might not be played.
 Pdef.all.do {|pdef| pdef.quant = 0; /* pdef.fadeTime = 0 */ }
 
-a.makeB1
 a.setMarking( (\p1: 1, \p2: 0) )
 a.prTask
 
@@ -216,7 +212,6 @@ m = SPNMediator( \sound );
 // RUN the next line
 Pdef.all.do {|pdef| pdef.quant = 0; }
 
-a.makeB1
 (
 a.setMarking(
 	a.marking.keysValuesChange({| key, value |
@@ -355,9 +350,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-
-a.makeB1;
-
 a.prTask;
 )
 
@@ -550,8 +542,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-
-a.makeB1;
 )
 
 a.prTask;
@@ -708,9 +698,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-
-a.makeB1;
-
 a.prTask;
 )
 
@@ -839,7 +826,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-a.makeB1;
 a.prTask;
 )
 
@@ -855,14 +841,18 @@ a.play
 
 a.samplePathAlgorithm(1, 0, \postCurrentState )
 
+(
 5.do {|i|
 	a.transitions.at( ( \outM ++ i ).asSymbol ).clock_( { 0.05.rrand(0.15) })
 }
+)
 
 PNPlace(\p0).addOneToken
 
+(
 a.transitions.at( \outM0 ).dependants.put(
 	\sound, (\instrument: \default, \midinote: 60, \dur: 1, \amp: 0.4 )
+)
 )
 
 a.stop;
@@ -888,7 +878,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-a.makeB1;
 a.prTask;
 )
 
@@ -902,14 +891,18 @@ a.setMarking(
 
 a.play
 
+(
 ~kanbans.do {|i|
 	a.transitions.at( ( \outM ++ i ).asSymbol ).clock_( { 0.01.rrand(0.02) })
 }
+)
 
 PNPlace(\p0).addOneToken
 
+(
 a.transitions.at( \outM0 ).dependants.put(
 	\sound, (\instrument: \default, \midinote: 50, \dur: 1, \amp: 0.4 )
+)
 )
 
 a.stop;
@@ -987,9 +980,6 @@ a = SPetriNet(
 );
 
 a.mediator_( SPNMediator( \sound ) );
-
-a.makeB1;
-
 a.prTask;
 )
 

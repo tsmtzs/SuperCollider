@@ -204,7 +204,7 @@ SPetriNet {
 	// \inhibitorPlaces: setOfInhibitorPlaces or nil, \updateInputPlaces: aFunction(optional),
 	// \updateOutputPlaces: aFunction(optional), \clockSpeed: aFunction(optional), \clock: aFunction(optional, \isTimed: aBoolean or nil)
 	*new {| ...dictionaries |
-		^ super.new.init( dictionaries );
+		^ super.new.init( dictionaries ).makeB1;
 	}
 
 	init {| dictionaries |
@@ -214,15 +214,11 @@ SPetriNet {
 		dictionaries.do {| aDict |
 			this.prAddPlaces( aDict );
 			transition = this.prAddTransition( aDict );
-			[ \isTimed, \transition].do {| aSymbol | // insert this 3 lines in method 'prAddTransition?
-				aDict.removeAt( aSymbol );
-			};
 			dependants = aDict.at( \dependants );
 			if( dependants.notNil ){
 				dependants.keysValuesDo {| key, val |
 					transition.addDependant( key, val )
 				};
-				aDict.removeAt( \dependants );
 			};
 			transition.performWithEnvir( \init, aDict );
 		}
@@ -278,7 +274,7 @@ SPetriNet {
 
 	makeB1 {
 		var transName;
-		unionOfB1 = Set[];
+		unionOfB1 = Set [];
 		transitions.do {| transition |
 			transName = transition.name;
 			transitions.do {| trans |
@@ -306,9 +302,9 @@ SPetriNet {
 	//step 1:
 	computeInitEnabledTransitions {
 		currentTime = 0;//timeOffset
-		enabledTransitions = Set[];
-		oldTransitions = Set[];
-		newTransitions = Set[];			// remove this line? dublicates with the last line
+		enabledTransitions = Set [];
+		oldTransitions = Set [];
+		newTransitions = Set [];			// remove this line? dublicates with the last line
 		transitions.do {| e |
 			if( e.isEnabled ){
 				enabledTransitions.add( e );
@@ -392,7 +388,7 @@ SPetriNet {
 				string = string ++ stateName ++":" + stateValue.asString ++ "\n\t"
 			};
 		};
-		^ string+"\n"
+		^ string + "\n"
 	}
 
 	samplePathAlgorithm {| dur = 5, startTime = 0, aSelector ...moreArgs |
@@ -404,7 +400,7 @@ SPetriNet {
 		this.prSamplePathsBasic( startTime );
 		//	this.prSamplePathsWithPerform( startTime, \value ); // use this line and delete method 'prSamplePathsBasic' ?
 
-		("First firing after time"+startTime.asString+"occured at time"+currentTime.asString).postln;
+		("First firing after time" + startTime.asString + "occured at time" + currentTime.asString).postln;
 
 		this.prSamplePathsWithPerform( endTime, aSelector, *moreArgs );
 	}
@@ -436,8 +432,6 @@ SPetriNet {
 		var trans;
 		trans = transitions.as(Set);
 		task = Task({
-			"Please set the initial marking. Then call 'play'.".postln;
-			nil.yield;
 			this.computeInitEnabledTransitions;
 
 			loop {
