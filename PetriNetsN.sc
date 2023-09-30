@@ -8,15 +8,13 @@
 // don't store pnEnvironment in each instance. Just pass it over so that an instance
 // can register in the Environment
 PNTransitionN {
-	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
-	var  <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlace instances or names of PNPlaces
+	var <name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 	var <>source;
 
 	*initClass{
-		all = IdentityDictionary.new;
 		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
 		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
@@ -29,12 +27,6 @@ PNTransitionN {
 		};
 	}
 
-	*at {| aSymbol |
-		^this.all.at( aSymbol );
-	}
-
-	*clearAll { this.all.clear }
-
 	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source |
 		var transition;
 		// look again this message - symbols - places
@@ -42,26 +34,15 @@ PNTransitionN {
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
 			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-		transition = this.at( name );
-		if( transition.isNil ){
-			transition = this.basicNew( name )
-			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
-			.source_( source )
-			.prAdd;
-		}{
-			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
-			.source_( source );
-		}
-		^ transition
+
+		^ this.basicNew( name )
+		.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
+		.source_( source );
 	}
 
 	*basicNew {| aSymbol |
-		^super.new
-		.name_( aSymbol );
+		^ super.newCopyArgs(aSymbol);
 	}
-
-
-	prAdd { all.put( name, this ) }
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
@@ -189,9 +170,6 @@ PNTimedTransitionN : PNTransitionN {
 	isTimed { ^true }
 
 	// asSimplePN {| aSymbol |
-	// 	aSymbol ?? {
-	// 		all.removeAt( name );
-	// 	};
 	// 	^ PNTransitionN( name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source )
 	// }
 }

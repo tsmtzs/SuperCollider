@@ -25,7 +25,7 @@
 // *. Wikipedia contributors. (2023, September 2). Petri net. In Wikipedia, The Free Encyclopedia. Retrieved 05:39, September 9, 2023, from https://en.wikipedia.org/w/index.php?title=Petri_net&oldid=1173376221
 
 (
-[ PNPlace, PNTransitionN ].do (_.clearAll);
+PNPlace.clearAll;
 
 ~net = PetriNetN(
 	(
@@ -157,7 +157,7 @@ Pbind(
 // For example, the next network is a modification of the above one:
 
 (
-[ PNPlace, PNTransitionN ].do (_.clearAll);
+PNPlace.clearAll;
 
 ~net = PetriNetN(
 	(
@@ -228,7 +228,7 @@ Pbind(
 // Timed transitions
 // //////////////////////////////////////////////////
 (
-[ PNPlace, PNTransitionN ].do (_.clearAll);
+PNPlace.clearAll;
 
 ~net = PetriNetN(
 	(
