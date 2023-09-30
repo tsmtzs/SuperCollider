@@ -1,6 +1,6 @@
 PNPlace {
 	classvar <>all;
-	var <>name, <tokens;
+	var <name, <tokens;
 
 	*initClass {
 		all = IdentityDictionary.new;
