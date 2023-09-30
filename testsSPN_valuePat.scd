@@ -92,7 +92,7 @@ q.nextN( 20 )
 //////////////////////////////////////////////////////////////////////
 
 (
-[ PNPlace, PNTransitionN ].do (_.clearAll);
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(
@@ -171,7 +171,7 @@ a.transitions
 )
 
 (
-[ PNPlace, PNTransitionN ].do (_.clearAll);
+PNPlace.clearAll;
 
 a = PetriNetN( *(~series.( 3 )) );
 )
@@ -235,8 +235,9 @@ a.pop
 //////////////////////////////////////////////////////////////////////
 
 // Haas, Ex. 1.4 p.19
-[ PNTransitionN, PNPlace ].do {|a| a.clearAll }
 (
+PNPlace.clearAll;
+
 a = PetriNetN(
 		(
 			transition: \e1,
@@ -311,7 +312,7 @@ a.push;
 // Haas, Ex. 2.1 p.24
 
 (
-[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(
@@ -377,7 +378,7 @@ a.stop
 // Haas, Ex. 2.2 p.29
 
 (
-[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(
@@ -429,7 +430,7 @@ a.stop
 // Ex. 2.4 p.31 Haas
 
 (
-[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(
@@ -535,7 +536,7 @@ p.next(())
 (
 var net;
 
-[ PNTransitionN, PNPlace ].do (_.clearAll);
+PNPlace.clearAll;
 
 net = ~rings.collect {|i| ~port.( i, ~rings ) }.flatten;
 
@@ -636,7 +637,7 @@ SynthDef(\help_mdapiano, { |out=0, freq=440, gate=1|
 (
 var net;
 
-[ PNTransitionN, PNPlace ].do (_.clearAll);
+PNPlace.clearAll;
 
 net = ~rings.collect {|i| ~port.( i, ~rings ) }.flat;
 
@@ -714,7 +715,7 @@ a.stop
 )
 
 (
-[ PNTransitionN, PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(
@@ -814,7 +815,7 @@ a.pop
 )
 
 (
-[ PNTimedTransitionN, PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(
@@ -931,7 +932,7 @@ p.next
 // testing the abiltity to set args of a node
 
 (
-[ PNTimedTransitionN, PNPlace ].do {|a| a.clearAll };
+PNPlace.clearAll;
 
 a = PetriNetN(
 	(

@@ -1,22 +1,14 @@
 // $LastChangedDate$
 // $Rev$
 
-// look again instance method 'pnEnvironment'
-// discriminate between places and transitions?
-// if a place and a transition have the same name, one is ovewritten
-// OR
-// don't store pnEnvironment in each instance. Just pass it over so that an instance
-// can register in the Environment
 PNTransitionN {
-	classvar <>all;
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
-	var  <>name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlace instances or names of PNPlaces
+	var <name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
 	var <>source;
 
 	*initClass{
-		all = IdentityDictionary.new;
 		updateInputPlacesDefault  = { {| aSet | aSet.do { |elem| elem.removeOneToken } } };
 		updateOutputPlacesDefault = { {| aSet | aSet.do { |elem| elem.addOneToken } } };
 		enabledFunctionDefault = {| inputPlaces, inhibitorPlaces |
@@ -29,12 +21,6 @@ PNTransitionN {
 		};
 	}
 
-	*at {| aSymbol |
-		^this.all.at( aSymbol );
-	}
-
-	*clearAll { this.all.clear }
-
 	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source |
 		var transition;
 		// look again this message - symbols - places
@@ -42,26 +28,15 @@ PNTransitionN {
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
 			"There are  common places in input places and inhibitor places of this transition.".error;
 		};
-		transition = this.at( name );
-		if( transition.isNil ){
-			transition = this.basicNew( name )
-			.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
-			.source_( source )
-			.prAdd;
-		}{
-			transition.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
-			.source_( source );
-		}
-		^ transition
+
+		^ this.basicNew( name )
+		.init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction )
+		.source_( source );
 	}
 
 	*basicNew {| aSymbol |
-		^super.new
-		.name_( aSymbol );
+		^ super.newCopyArgs(aSymbol);
 	}
-
-
-	prAdd { all.put( name, this ) }
 
 	init {| inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction |
 		this.inputPlaces_( inputPlaces )
@@ -189,9 +164,6 @@ PNTimedTransitionN : PNTransitionN {
 	isTimed { ^true }
 
 	// asSimplePN {| aSymbol |
-	// 	aSymbol ?? {
-	// 		all.removeAt( name );
-	// 	};
 	// 	^ PNTransitionN( name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, source )
 	// }
 }
@@ -357,7 +329,7 @@ PNSamplePath {
 	makeB1 {
 		var unionOfB1;					// change this name
 		b1.clear;
-		unionOfB1 = Set[];
+		unionOfB1 = Set [];
 		transitions.do {| transition |
 			unionOfB1.clear;
 			unionOfB1.add( transition );
@@ -377,7 +349,7 @@ PNSamplePath {
 SimpleSamplePath : PNSamplePath {
 	// step 1:
 	computeInitEnabledTransitions {
-		enabledTransitions = Set[];
+		enabledTransitions = Set [];
 		transitions.do {| aSymbol |
 			// if petriNet is a subclass of IdentityDictionary then use
 			// petriNet[ aSymbol ].isEnabled
@@ -443,7 +415,7 @@ TimedSamplePath : PNSamplePath {
 		}.minItem;
 		firingTransitions = enabledTransitions.select {| aSymbol |
 			// petriNet[ aSymbol ].clockReading == holdingTime;
-			petriNet[ aSymbol ].clockReading.equalWithPrecision( holdingTime, 0.00000000000001 ); // ????
+			petriNet[ aSymbol ].clockReading.equalWithPrecision( holdingTime, 1e-8 ); // ????
 		};
 	}
 	//step 3:
@@ -507,25 +479,23 @@ PNPatternN : Pattern {
 	storeArgs { ^ [ petriNet, length, marking, sources ] }
 
 	embedInStream {| inval |
-		var samplePath, streamDict, net;
+		var samplePath, streamDict;
 
-		net = petriNet;					// copy
+		if( sources.notNil ){ petriNet.setSources( sources ) };
 
-		if( sources.notNil ){ net.setSources( sources ) };
-
-		streamDict = net.transitions.collect {| trans |
+		streamDict = petriNet.transitions.collect {| trans |
 			[ trans.name, trans.source.asStream ]
 		}.flatten.as( Event );
 
-		if( marking.notNil ){ net.setMarking( marking ) };
+		if( marking.notNil ){ petriNet.setMarking( marking ) };
 
-		samplePath = SimpleSamplePath( net );
+		samplePath = SimpleSamplePath( petriNet );
 
 		samplePath.computeInitEnabledTransitions;
 
 		length.do {
 			inval = samplePath.enabledTransitions.collect {| aSymbol |
-				net.sourceAt( aSymbol ).value;
+				petriNet.sourceAt( aSymbol ).value;
 			}.asArray;
 
 			if( inval.size == 1 ){ inval = inval.pop }; // better approach for this?
@@ -608,19 +578,17 @@ PNEventPattern : Pattern {
 	// }
 
 	embedInStream {| inevent |
-		var samplePath, transitions, streamDict, net, ev;
+		var samplePath, transitions, streamDict, ev;
 		var aTrans, newTrans, cleanupTrans, cleanupEvents, cleanupType, cleanupEventType;
 		var size;
 
 		cleanupEvents = IdentityDictionary[];
 
-		net = petriNet;					// copy??
+		if( sources.notNil ){ petriNet.setSources( sources ) };
 
-		if( sources.notNil ){ net.setSources( sources ) };
+		if( marking.notNil ){ petriNet.setMarking( marking ) };
 
-		if( marking.notNil ){ net.setMarking( marking ) };
-
-		samplePath = TimedSamplePath( net );
+		samplePath = TimedSamplePath( petriNet );
 
 		samplePath.computeInitEnabledTransitions;
 
@@ -636,7 +604,7 @@ PNEventPattern : Pattern {
 				newTrans.do {| aSymbol, i |
 					// If the source var of each transition stores only Events
 					// and only one at a time then you have real time access to source
-					ev = petriNet[ aSymbol ].source.( net ); // oneEventAssuption
+					ev = petriNet[ aSymbol ].source.( petriNet ); // oneEventAssuption
 					// ev = streamDict.at( aSymbol );
 
 					ev = ev.next( inevent ) ?? { ( type: \rest ) };

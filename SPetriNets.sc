@@ -3,10 +3,10 @@
 
 SPNImmediateTransition {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
-	var inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlace instances or names of PNPlaces
+	var <name, inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlace instances or names of PNPlaces
 	var <>clockSpeed, <>updateInputPlaces, <>updateOutputPlaces; //Functions with second arg a SPetriNet ( first for clockSpeed )
 	var <>enabledFunction;										 // a Function with args | inputPlaces, inhibitorPlaces | and values true - false
-	var <name, <>spnMediator;
+	var <>spnMediator;
 	var <clock = 0, <>clockReading; // clock is a function with first arg a SPetriNet, and clockReading is a value of this function
 	var <currentState;				// put this var in subclass SPNTimedTransition only?
 
@@ -24,17 +24,16 @@ SPNImmediateTransition {
 		clockSpeedDefault = 1;
 	}
 
-	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
+	*new { | name, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
 		if( inhibitorPlaces.notNil and: { (inputPlaces.asSet & inhibitorPlaces.asSet).isEmpty.not } ){
-			^("There are  common Places in InputPlaces and InhibitorPlaces of transition" + key.asString).error;
+			^("There are  common Places in InputPlaces and InhibitorPlaces of transition" + name.asString).error;
 		};
 
-		this.basicNew( key ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
+		^ this.basicNew( name ).init( inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed );
 	}
 
-	*basicNew {| key |
-		^super.new
-		.instVarPut( \name, key );
+	*basicNew {| name |
+		^super.newCopyArgs(name);
 	}
 
 	init { | inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed |
