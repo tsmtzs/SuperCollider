@@ -1,6 +1,3 @@
-// $LastChangedDate$
-// $Rev$
-
 SPNImmediateTransition {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault, <clockSpeedDefault;
 	var <name, inputPlaces, inhibitorPlaces, outputPlaces; //Sets of PNPlace instances or names of PNPlaces
@@ -165,7 +162,7 @@ SPNTimedTransition : SPNImmediateTransition {
 
 	*new { | key, inputPlaces, outputPlaces, inhibitorPlaces, clock, updateInputPlaces, updateOutputPlaces,  enabledFunction, clockSpeed |
 		^super.new( key, inputPlaces, outputPlaces, inhibitorPlaces, updateInputPlaces, updateOutputPlaces, enabledFunction, clockSpeed, clock )
-		// is this well writen? 'super' doesn't have a 'clock' arg
+		// is this well written? 'super' doesn't have a 'clock' arg
 	}
 
 	*basicNew {| key |

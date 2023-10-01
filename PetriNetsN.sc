@@ -1,6 +1,3 @@
-// $LastChangedDate$
-// $Rev$
-
 PNTransitionN {
 	classvar <updateInputPlacesDefault, <updateOutputPlacesDefault, <enabledFunctionDefault;
 	var <name, inputPlaces, outputPlaces, inhibitorPlaces; //Sets of PNPlace instances or names of PNPlaces

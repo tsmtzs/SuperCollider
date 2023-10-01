@@ -1,7 +1,6 @@
 // Examples from
 // Petri nets and manufacturing systems: An examples-driven tour
 // by L. Recalde , M. Silva, J. Ezpeleta , and E. Teruel
-// for revisions > 23 of PetriNetsN.sc
 
 //////////////////////////////////////////////////////////////////////
 // Assembly manufacturing cell
