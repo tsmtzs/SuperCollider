@@ -2,8 +2,8 @@
 // The classes presented here are a naive and incomplete attempt to build an algorithmic sound framework based on Petri Nets.
 // It is developed under the premise that Petri nets "are a promising tool for describing and studying information processing systems that are
 // characterized as being concurrent, asynchronous, distributed, parallel, nondeterministic, and/or stochastic" (Murata 1989).
-// For an introduction and terminology refer to (Murata 1989), (Wikipedia 2023). Further resources of interest might be (Girault et al. 2003),
-// (Haas 2002), (Recalde et al. 2003).
+// For an introduction and terminology refer to Murata (1989) and Wikipedia (2023). Further resources of interest might be Girault et al. (2003),
+// Haas (2002) and Recalde et al. (2003).
 
 // In the literature, Petri net transitions are used to model events and actions. This is the approach we follow here to model sound events.
 // Transitions come in two class hierarhies:
