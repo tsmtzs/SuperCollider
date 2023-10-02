@@ -1,11 +1,30 @@
 // NOTE:
 // The classes presented here are a naive and incomplete attempt to build an algorithmic sound framework based on Petri Nets.
-// It is based on the assumption that Petri nets "are a promising tool for describing and studying information processing systems that are
+// It is developed under the premise that Petri nets "are a promising tool for describing and studying information processing systems that are
 // characterized as being concurrent, asynchronous, distributed, parallel, nondeterministic, and/or stochastic" (Murata 1989).
 // For an introduction and terminology refer to (Murata 1989), (Wikipedia 2023). Further resources of interest might be (Girault et al. 2003),
 // (Haas 2002), (Recalde et al. 2003).
 
 // In the literature, Petri net transitions are used to model events and actions. This is the approach we follow here to model sound events.
+// Transitions come in two class hierarhies:
+//	  	SPNImmediateTransition								  PNTransitionN
+//	  			  ^													^
+//	      	   	  |												    |
+//	  			  |							and						|
+//	  			  |													|
+//	  			  |													|
+//	  	 SPNTimedTransition									PNTimedTransitionN
+// These are mutually excluding, although interfaces largerly overlap.
+
+// SPNImmediateTransition and SPNTimedTransition work with the class SPetriNet. They handle sound events by adopting the Observer pattern.
+// Upon transition firing the 'changed' message is send to all dependants.
+
+// On the other hand, PNTransitionN and PNTimedTransitionN are compatible with the class SPetriNetN. They both share a 'source' instance
+// variable. It holds an object which is send the 'value' message whenever a transition fires.
+
+// PetriNetN (and all the relevant classes) is more or less a refined version of SPetriNet (and all the relevant classes). They should be
+// regarded as two offshoots towards developing a single Petri Net class toolkit.
+
 // All examples that we present should be seen as a demonstration of the classes. They were not included for their musicality and/or network
 // properties. In fact, this project was largerly discontinued because of the difficulty in developing intuitive associations between
 // sound and network structure.
@@ -23,6 +42,14 @@
 // *. Recalde, L., Suárez, M.S., Ezpeleta, J., & Teruel, E. (2003). Petri Nets and Manufacturing Systems: An Examples-Driven Tour. Lectures on Concurrency and Petri Nets.
 // *. Rodriguez, A. (2011). Formal Music Representation ; a Case Study : the Model of Ravel ' s Bolero by Petri Nets † Goffredo Haus.
 // *. Wikipedia contributors. (2023, September 2). Petri net. In Wikipedia, The Free Encyclopedia. Retrieved 05:39, September 9, 2023, from https://en.wikipedia.org/w/index.php?title=Petri_net&oldid=1173376221
+
+// //////////////////////////////////////////////////
+// Examples with SPetriNet
+// //////////////////////////////////////////////////
+
+// //////////////////////////////////////////////////
+// Examples with PetriNetN
+// //////////////////////////////////////////////////
 
 (
 PNPlace.clearAll;
