@@ -14,6 +14,9 @@ This package collects my `SuperCollider` classes and extensions. These are:
 * `MultiPortNetAddr`
 	`OSC` communication with applications that share the same `IP` address but listen on different ports.
 
+* `PetriNets`
+	A collection of classes that build a *Petri Net* framework for modeling sound events and structures. For an introduction and examples please refer to [about-PetriNets.scd](PetriNets/about-PetriNets.scd).
+
 * `PGraphWalk`
    A subclass of `Pattern`. Generates a random walk over the vertices of a given graph.
 
@@ -32,8 +35,8 @@ This package collects my `SuperCollider` classes and extensions. These are:
 Clone repository under directory `Platform.systemExtensionDir`.
 
 ## Contribute
-- **Use the classes and report issues, errors and bugs**.
-- **Help improve the code**.
+- Use the classes and report issues, errors and bugs.
+- Help improve the code.
 
 ## License
 [GPLv3](LICENSE)
