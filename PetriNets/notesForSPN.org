@@ -1,0 +1,47 @@
+- Δημιούργησε μια κλάση για να αποθηκεύεις SPetriNets ή τμήμα από SPN ή συναρτήσεις με
+   ορίσματα διάφορες παραμέτρους του SPN και επιστρεφόμενη τιμή ένα SPN ή τμήμα αυτού.
+   ( δες τις κλάσεις Archive, History, Library )
+- Δημιούργησε ένα graphical editor  για τη δημιουργία και διαχείριση ενός SPN. Να 
+   μπορεί, επίσης, να παίζει σε πραγματικό χρόνο το SPN ( χρησιμοποιώντας μια ξεχωριστή 
+   κλάση για GUI ; ). Να μπορεί να διαβάζει ένα SPN από την αποθήκη.
+- *ΠΡΟΣΟΧΗ*: στο βιβλίο του Haas υποτιθεται ότι όλες οι transitions έχουν clock με συνεχή
+   κατανομή. Έτσι, αν δύο transitions είναι και οι δύο enabled και έχουν μία, 
+   τουλάχιστον, κοινή input place, τότε το μέτρο του ενδεχομένου να fire και οι δύο 
+   ταυτόχρονα  είναι 0.
+   Για τον αλγόριθμο που προτείνεται στο βιβλίο, αν στην παραπάνω περίπτωση, οι δύο
+   transitions έχουν κοινό clock σταθερό αριθμό, τότε όταν και οι δύο fire, θα 
+   αφαιρέσουν από την κοινή input place από ένα token.
+   // supercollider code
+(
+[ SPetriNet, SPNImmediateTransition, SPNPlace ].do {|a| a.clearAll };
+a = SPetriNet(\a,
+	(
+		\transition: \t1,
+		\inputPlaces: [\p1],
+		\outputPlaces: [],
+		\inhibitorPlaces: [],
+		\clock: { 0.5 }
+	),
+	(
+		\transition: \t2,
+		\inputPlaces: [\p1],
+		\outputPlaces: [],
+		\inhibitorPlaces: [],
+		\clock: { 0.5 }
+	)
+);
+a.makeB1;
+)
+a.setMarking( (\p1 : 1 ) );
+a.samplePathAlgorithm(5, 0, \postCurrentState );
+a.marking;
+	Σε μια τέτοια περίπτωση conflict, φρόντισε η κοινή input place να δέχεται τον 
+	απαιτούμενο αριθμό tokens.
+- Στην κλάση SPetriNet να προσαρτήσεις ένα Environment αλά ProxySpace. Στέλνοντας το
+   μήνυμα push θα μπορείς να γράφεις ~t1.clock = { 1.0 } αντί για
+   SPNTimedTransition(\t1).clock_( { 1.0 } )
+   - Ξαναδές τις μεθόδους psSetIfNotNil στην κλάσεις SPNImmetiateTransition. Μήπως να την διαγράψεις;
+   - Σε ένα SPN που τρέχει σε πραγματικό χρόνο μπορείς να προσθέσεις tokes σε κάποια / ες SPNPlace.
+   Όμως, πως θα μπορούσες να αφαιρέσεις tokens από κάποια SPNPlace ή να αλλάξεις τον αριθμό των
+   tokens, δεδομένου ότι το marking μεταβάλλεται;
+   - Δημιούργησε μια κλάση 'BehaviorSpace' όπως στη NetLogo;
