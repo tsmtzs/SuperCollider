@@ -19,7 +19,7 @@
 // SPNImmediateTransition and SPNTimedTransition work with the class SPetriNet. They handle sound events by adopting the Observer pattern.
 // Upon transition firing the 'changed' message is send to all dependants.
 
-// On the other hand, PNTransitionN and PNTimedTransitionN are compatible with the class SPetriNetN. They both share a 'source' instance
+// On the other hand, PNTransitionN and PNTimedTransitionN are compatible with the class PetriNetN. They both share a 'source' instance
 // variable. It holds an object which is send the 'value' message whenever a transition fires.
 
 // PetriNetN (and all the relevant classes) is more or less a refined version of SPetriNet (and all the relevant classes). They should be
@@ -44,11 +44,7 @@
 // *. Wikipedia contributors. (2023, September 2). Petri net. In Wikipedia, The Free Encyclopedia. Retrieved 05:39, September 9, 2023, from https://en.wikipedia.org/w/index.php?title=Petri_net&oldid=1173376221
 
 // //////////////////////////////////////////////////
-// Examples with SPetriNet
-// //////////////////////////////////////////////////
-
-// //////////////////////////////////////////////////
-// Examples with PetriNetN
+// Examples for PetriNetN
 // //////////////////////////////////////////////////
 
 (
@@ -253,7 +249,6 @@ Pbind(
 
 // //////////////////////////////////////////////////
 // Timed transitions
-// //////////////////////////////////////////////////
 (
 PNPlace.clearAll;
 
@@ -335,3 +330,129 @@ Post << ~post.nextN(30);
 ~net.at(\t4).clock_({ [0.5, 1].choose });
 ~net.at(\t5).clock_(0.5);
 )
+
+// //////////////////////////////////////////////////
+// Example for SPetriNet
+// //////////////////////////////////////////////////
+(
+PNPlace.clearAll;
+
+~net = SPetriNet(
+	(
+		transition: \t1,
+		inputPlaces: [\p1],
+		outputPlaces: [\p2],
+		clock: { [0.5, 1].choose },
+		dependants: (
+			sound: (
+				midinote: 55,
+				amp: 0.2,
+				pan: 1.0.rand2,
+			)
+		)
+	),
+	(
+		transition: \t2,
+		inputPlaces: [\p2],
+		outputPlaces: [\p3],
+		clock: { [0.125, 0.25, 0.5].choose },
+		dependants: (
+			sound: (
+				midinote: 65,
+				amp: 0.5,
+				pan: 1.0.rand2,
+			)
+		)
+	),
+	(
+		transition: \t3,
+		inputPlaces: [\p3],
+		outputPlaces: [\p7],
+		inhibitorPlaces: [\p4],
+		clock: { [0.125, 0.25].choose },
+		dependants: (
+			sound: (
+				midinote: 68,
+				amp: 0.5,
+				pan: 1.0.rand2,
+			)
+		)
+	),
+	(
+		transition: \t4,
+		inputPlaces: [\p4],
+		outputPlaces: [\p5],
+		clock: { [0.5, 1].choose },
+		dependants: (
+			sound: (
+				midinote: 60,
+				amp: 0.2,
+				pan: 1.0.rand2,
+			)
+		)
+	),
+	(
+		transition: \t5,
+		inputPlaces: [\p5],
+		outputPlaces: [\p6],
+		clock: { [0.125, 0.25, 0.5].choose },
+		dependants: (
+			sound: Plazy {
+				(
+					midinote: [87, 89].choose,
+					amp: 0.6,
+					pan: 1.0.rand2,
+				)
+			}
+		)
+	),
+	(
+		transition: \t6,
+		inputPlaces: [\p6],
+		outputPlaces: [\p7],
+		inhibitorPlaces: [\p1],
+		clock: { [0.125, 0.25].choose },
+		dependants: (
+			sound: (
+				midinote: 85,
+				amp: 0.4,
+				pan: 1.0.rand2,
+			)
+		)
+	),
+	(
+		transition: \t7,
+		inputPlaces: [\p7],
+		outputPlaces: [\p1, \p4],
+		isTimed: false,
+		updateOutputPlaces: { |outputPlaces|
+			outputPlaces.choose.addTokens(1.rrand(2))
+		}
+	)
+);
+
+~net.mediator_( SPNMediator( \sound ) );
+~net.prTask;
+~net.setMarking((p7: 1));
+)
+
+~net.play;
+
+// While the pattern is playing:
+(
+~net.transitions.at(\t3)
+.addDependant(
+	\sound,
+	Pbind(
+		\midinote, Pfunc { 80.rrand(92) },
+		\dur, 0.05,
+		\amp, 0.3,
+		\legato, 0.1,
+		\pan, 1.0.rand2
+	).asEventStreamPlayer
+)
+)
+
+~net.transitions.at(\t1).clock({ [0.125, 0.25].choose });
+
+~net.stop;
